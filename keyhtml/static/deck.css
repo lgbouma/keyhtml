@@ -1,0 +1,53 @@
+/* keyhtml deck styles — shared by the editor canvas and the presentation player. */
+.kh-deck{position:relative;width:1920px;height:1080px;
+  --kh-bg:#ffffff;--kh-color:#1d1d1f;--kh-accent:#0a84ff;--kh-muted:#6e6e73;
+  --kh-font:"Helvetica Neue",Helvetica,Arial,sans-serif;--kh-heading-font:var(--kh-font);}
+.kh-slide{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;
+  background:var(--kh-bg);color:var(--kh-color);font-family:var(--kh-font);font-size:40px;line-height:1.3;}
+.kh-el{position:absolute;box-sizing:border-box;transform-origin:center center;}
+.kh-text{display:flex;flex-direction:column;justify-content:flex-start;}
+.kh-valign-middle{justify-content:center}
+.kh-valign-bottom{justify-content:flex-end}
+.kh-body{width:100%;padding:4px 8px;outline:none;overflow-wrap:break-word;box-sizing:border-box;min-height:1em;}
+.kh-shape .kh-body{padding:0.3em 0.5em;text-align:center}
+.kh-body p{margin:0}
+.kh-body ul,.kh-body ol{margin:0;padding-left:1.1em}
+.kh-body li{margin:0.12em 0}
+.kh-body li::marker{color:var(--kh-accent)}
+.kh-body h1,.kh-body h2,.kh-body h3{margin:0;font-family:var(--kh-heading-font);line-height:1.15}
+.kh-body a{color:var(--kh-accent)}
+.kh-body table{border-collapse:collapse;width:100%}
+.kh-body td,.kh-body th{border:2px solid rgba(128,128,128,.5);padding:0.2em 0.5em;vertical-align:top;text-align:left}
+.kh-body th{font-weight:700}
+.kh-body code,.kh-body pre{font-family:Menlo,Monaco,Consolas,"Courier New",monospace;font-size:0.85em}
+.kh-body pre{margin:0;white-space:pre-wrap}
+.kh-body blockquote{margin:0 0 0 0.5em;padding-left:0.5em;border-left:0.15em solid var(--kh-accent)}
+.kh-heading{font-family:var(--kh-heading-font);font-weight:700;line-height:1.15}
+.kh-mi{display:inline-block;vertical-align:baseline;white-space:nowrap}
+.kh-mi svg{display:inline-block;overflow:visible}
+.kh-mi[data-display="1"]{display:block;text-align:center;margin:0.25em 0}
+.kh-image img{width:100%;height:100%;display:block;object-fit:fill;-webkit-user-drag:none;user-select:none}
+.kh-image.kh-fit-contain img{object-fit:contain}
+.kh-image.kh-fit-cover img{object-fit:cover}
+.kh-image.kh-cropped{overflow:hidden}
+.kh-image.kh-cropped img{position:absolute;max-width:none;object-fit:fill}
+.kh-group{overflow:visible}
+.kh-video video,.kh-video audio{width:100%;height:100%;display:block}
+.kh-video video{background:#000}
+.kh-math{display:block}
+.kh-math svg{width:100%;height:100%;display:block;overflow:visible}
+.kh-shape{display:flex;flex-direction:column;justify-content:center;}
+.kh-shape-ellipse{border-radius:50%}
+.kh-shape-triangle{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.kh-shape-diamond{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.kh-shape-pentagon{clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)}
+.kh-shape-hexagon{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.kh-shape-star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.kh-shape-rarrow{clip-path:polygon(0 25%,60% 25%,60% 0,100% 50%,60% 100%,60% 75%,0 75%)}
+.kh-shape-larrow{clip-path:polygon(100% 25%,40% 25%,40% 0,0 50%,40% 100%,40% 75%,100% 75%)}
+.kh-shape-chevron{clip-path:polygon(0 0,80% 0,100% 50%,80% 100%,0 100%,20% 50%)}
+.kh-shape-line{display:block}
+.kh-shape-line svg{width:100%;height:100%;display:block;overflow:visible}
+.kh-html{overflow:hidden}
+.kh-html iframe{width:100%;height:100%;border:0;display:block}
+.kh-notes{display:none}

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="keyhtml 0.1.0">
+<title>keyhtml demo</title>
+<style id="kh-deck-css">
+/* keyhtml deck styles — shared by the editor canvas and the presentation player. */
+.kh-deck{position:relative;width:1920px;height:1080px;
+  --kh-bg:#ffffff;--kh-color:#1d1d1f;--kh-accent:#0a84ff;--kh-muted:#6e6e73;
+  --kh-font:"Helvetica Neue",Helvetica,Arial,sans-serif;--kh-heading-font:var(--kh-font);}
+.kh-slide{position:absolute;left:0;top:0;width:100%;height:100%;overflow:hidden;
+  background:var(--kh-bg);color:var(--kh-color);font-family:var(--kh-font);font-size:40px;line-height:1.3;}
+.kh-el{position:absolute;box-sizing:border-box;transform-origin:center center;}
+.kh-text{display:flex;flex-direction:column;justify-content:flex-start;}
+.kh-valign-middle{justify-content:center}
+.kh-valign-bottom{justify-content:flex-end}
+.kh-body{width:100%;padding:4px 8px;outline:none;overflow-wrap:break-word;box-sizing:border-box;min-height:1em;}
+.kh-shape .kh-body{padding:0.3em 0.5em;text-align:center}
+.kh-body p{margin:0}
+.kh-body ul,.kh-body ol{margin:0;padding-left:1.1em}
+.kh-body li{margin:0.12em 0}
+.kh-body li::marker{color:var(--kh-accent)}
+.kh-body h1,.kh-body h2,.kh-body h3{margin:0;font-family:var(--kh-heading-font);line-height:1.15}
+.kh-body a{color:var(--kh-accent)}
+.kh-body table{border-collapse:collapse;width:100%}
+.kh-body td,.kh-body th{border:2px solid rgba(128,128,128,.5);padding:0.2em 0.5em;vertical-align:top;text-align:left}
+.kh-body th{font-weight:700}
+.kh-body code,.kh-body pre{font-family:Menlo,Monaco,Consolas,"Courier New",monospace;font-size:0.85em}
+.kh-body pre{margin:0;white-space:pre-wrap}
+.kh-body blockquote{margin:0 0 0 0.5em;padding-left:0.5em;border-left:0.15em solid var(--kh-accent)}
+.kh-heading{font-family:var(--kh-heading-font);font-weight:700;line-height:1.15}
+.kh-mi{display:inline-block;vertical-align:baseline;white-space:nowrap}
+.kh-mi svg{display:inline-block;overflow:visible}
+.kh-mi[data-display="1"]{display:block;text-align:center;margin:0.25em 0}
+.kh-image img{width:100%;height:100%;display:block;object-fit:fill;-webkit-user-drag:none;user-select:none}
+.kh-image.kh-fit-contain img{object-fit:contain}
+.kh-image.kh-fit-cover img{object-fit:cover}
+.kh-video video,.kh-video audio{width:100%;height:100%;display:block}
+.kh-video video{background:#000}
+.kh-math{display:block}
+.kh-math svg{width:100%;height:100%;display:block;overflow:visible}
+.kh-shape{display:flex;flex-direction:column;justify-content:center;}
+.kh-shape-ellipse{border-radius:50%}
+.kh-shape-triangle{clip-path:polygon(50% 0,100% 100%,0 100%)}
+.kh-shape-diamond{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.kh-shape-pentagon{clip-path:polygon(50% 0,100% 38%,82% 100%,18% 100%,0 38%)}
+.kh-shape-hexagon{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.kh-shape-star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+.kh-shape-rarrow{clip-path:polygon(0 25%,60% 25%,60% 0,100% 50%,60% 100%,60% 75%,0 75%)}
+.kh-shape-larrow{clip-path:polygon(100% 25%,40% 25%,40% 0,0 50%,40% 100%,40% 75%,100% 75%)}
+.kh-shape-chevron{clip-path:polygon(0 0,80% 0,100% 50%,80% 100%,0 100%,20% 50%)}
+.kh-shape-line{display:block}
+.kh-shape-line svg{width:100%;height:100%;display:block;overflow:visible}
+.kh-html{overflow:hidden}
+.kh-html iframe{width:100%;height:100%;border:0;display:block}
+.kh-notes{display:none}
+</style>
+<style id="kh-player-css">
+/* keyhtml player — presentation-mode chrome. Embedded in every saved deck. */
+html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif}
+.kh-deck{position:absolute;left:0;top:0;transform-origin:0 0}
+.kh-slide{display:none}
+.kh-slide.kh-current,.kh-slide.kh-leaving{display:block}
+.kh-slide.kh-leaving{pointer-events:none;z-index:2}
+.kh-el.kh-hidden{visibility:hidden}
+.kh-el.kh-build-in{animation:kh-fadein .35s ease-out}
+.kh-el[data-build-effect="appear"].kh-build-in{animation:none}
+.kh-el[data-build-effect="rise"].kh-build-in{animation:kh-rise .45s cubic-bezier(.2,.7,.3,1)}
+.kh-el[data-build-effect="pop"].kh-build-in{animation:kh-pop .4s cubic-bezier(.2,.9,.3,1.3)}
+.kh-el[data-build-effect="slide-left"].kh-build-in{animation:kh-slideleft .45s cubic-bezier(.2,.7,.3,1)}
+@keyframes kh-fadein{from{opacity:0}to{opacity:1}}
+@keyframes kh-fadeout{from{opacity:1}to{opacity:0}}
+@keyframes kh-rise{from{opacity:0;transform:translateY(40px)}to{opacity:1}}
+@keyframes kh-pop{from{opacity:0;transform:scale(.6)}to{opacity:1}}
+@keyframes kh-slideleft{from{opacity:0;transform:translateX(80px)}to{opacity:1}}
+/* rotation on built elements: keep the author's rotate() by animating a wrapper var is overkill; elements with rotation just fade */
+.kh-deck[data-kh-trans="fade"] .kh-slide.kh-enter{animation:kh-fadein .35s ease-out}
+.kh-deck[data-kh-trans="fade"] .kh-slide.kh-leaving{animation:kh-fadeout .35s ease-out forwards}
+.kh-deck[data-kh-trans="push"] .kh-slide.kh-enter{animation:kh-pushin .45s cubic-bezier(.4,0,.2,1)}
+.kh-deck[data-kh-trans="push"] .kh-slide.kh-leaving{animation:kh-pushout .45s cubic-bezier(.4,0,.2,1) forwards}
+.kh-deck[data-kh-trans="push"].kh-back .kh-slide.kh-enter{animation:kh-pushin-back .45s cubic-bezier(.4,0,.2,1)}
+.kh-deck[data-kh-trans="push"].kh-back .kh-slide.kh-leaving{animation:kh-pushout-back .45s cubic-bezier(.4,0,.2,1) forwards}
+.kh-deck[data-kh-trans="zoom"] .kh-slide.kh-enter{animation:kh-zoomin .4s cubic-bezier(.2,.7,.3,1)}
+.kh-deck[data-kh-trans="zoom"] .kh-slide.kh-leaving{animation:kh-fadeout .3s ease-out forwards}
+@keyframes kh-pushin{from{transform:translateX(100%)}to{transform:none}}
+@keyframes kh-pushout{from{transform:none}to{transform:translateX(-100%)}}
+@keyframes kh-pushin-back{from{transform:translateX(-100%)}to{transform:none}}
+@keyframes kh-pushout-back{from{transform:none}to{transform:translateX(100%)}}
+@keyframes kh-zoomin{from{opacity:0;transform:scale(1.08)}to{opacity:1}}
+#kh-num{position:absolute;right:34px;bottom:22px;font-size:22px;opacity:.55;font-family:var(--kh-font);color:var(--kh-color);z-index:3;pointer-events:none}
+#kh-black{position:fixed;inset:0;background:#000;display:none;z-index:50}
+#kh-black.kh-on{display:block}
+#kh-help{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,20,22,.96);color:#eee;padding:28px 36px;border-radius:14px;font-size:15px;line-height:1.7;display:none;z-index:60;box-shadow:0 20px 60px rgba(0,0,0,.6);min-width:360px}
+#kh-help.kh-on{display:block}
+#kh-help h3{margin:0 0 10px;font-weight:600;font-size:17px}
+#kh-help kbd{display:inline-block;min-width:1.6em;text-align:center;background:#333;border:1px solid #555;border-radius:5px;padding:0 6px;margin-right:8px;font-family:inherit;font-size:13px}
+#kh-overview{position:fixed;inset:0;background:#141416;overflow:auto;display:none;z-index:40;padding:36px;box-sizing:border-box}
+#kh-overview.kh-on{display:block}
+#kh-overview .kh-ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:26px}
+#kh-overview .kh-ov-item{cursor:pointer;color:#bbb;font-size:13px}
+#kh-overview .kh-ov-frame{width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:6px;background:#000;border:3px solid transparent;box-shadow:0 4px 16px rgba(0,0,0,.5);position:relative}
+#kh-overview .kh-ov-item.kh-ov-cur .kh-ov-frame{border-color:#0a84ff}
+#kh-overview .kh-ov-item:hover .kh-ov-frame{border-color:#5ac8fa}
+#kh-overview .kh-ov-label{margin-top:6px}
+.kh-ov-deck{position:absolute;left:0;top:0;transform-origin:0 0}
+.kh-ov-deck .kh-slide{display:block}
+.kh-ov-deck .kh-el.kh-hidden{visibility:visible}
+/* presenter view */
+body.kh-presenter{overflow:hidden;background:#161618;color:#e8e8ea}
+#kh-pres{position:fixed;inset:0;display:flex;flex-direction:column}
+#kh-pres .kh-pres-top{flex:1;display:flex;min-height:0;padding:18px;gap:18px;box-sizing:border-box}
+#kh-pres .kh-pres-cur{flex:3;position:relative;min-width:0;background:#000;border-radius:6px;overflow:hidden}
+#kh-pres .kh-pres-side{flex:2;display:flex;flex-direction:column;gap:14px;min-width:0}
+#kh-pres .kh-pres-nextwrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:6px;overflow:hidden;flex:none}
+#kh-pres .kh-pres-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#8a8a8e;margin-bottom:6px}
+#kh-pres .kh-pres-notes{flex:1;overflow:auto;background:#222225;border-radius:6px;padding:16px 20px;font-size:22px;line-height:1.5;white-space:pre-wrap;min-height:0}
+#kh-pres .kh-pres-bar{flex:none;display:flex;align-items:center;gap:26px;padding:12px 24px;background:#0f0f10;font-size:18px;font-variant-numeric:tabular-nums}
+#kh-pres .kh-pres-bar .kh-pres-time{font-size:30px;font-weight:600}
+#kh-pres .kh-pres-bar button{background:#2c2c30;color:#eee;border:0;border-radius:6px;padding:6px 14px;font-size:14px;cursor:pointer}
+#kh-pres .kh-pres-bar button:hover{background:#3a3a40}
+#kh-pres .kh-pres-bar .kh-pres-spacer{flex:1}
+#kh-pres .kh-pres-end{color:#8a8a8e}
+.kh-pres-deck{position:absolute;left:0;top:0;transform-origin:0 0}
+/* print / PDF export: one slide per page, all builds shown */
+body.kh-print{overflow:visible;background:#fff}
+body.kh-print .kh-deck{position:static;transform:none!important;width:1920px;height:auto}
+body.kh-print .kh-slide{display:block;position:relative;width:1920px;height:1080px;break-after:page;page-break-after:always}
+body.kh-print .kh-slide:last-of-type{break-after:auto;page-break-after:auto}
+body.kh-print .kh-el.kh-hidden{visibility:visible}
+body.kh-print #kh-num{display:none}
+@page{size:1920px 1080px;margin:0}
+@media print{html,body{background:#fff}}
+</style>
+<style id="kh-custom-css">
+
+</style>
+<script type="text/plain" id="kh-custom-css-src"></script>
+<script type="text/x-keyhtml-macros" id="kh-macros">\newcommand{\Msun}{M_\odot}</script>
+</head>
+<body>
+<div class="kh-deck" data-width="1920" data-height="1080" data-transition="fade" style="--kh-bg: #ffffff; --kh-color: #1d1d1f; --kh-accent: #0a84ff; --kh-muted: #6e6e73; --kh-font: &quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif; --kh-heading-font: &quot;Helvetica Neue&quot;,Helvetica,Arial,sans-serif; width: 1920px; height: 1080px;" data-slide-numbers="1">
+  <section class="kh-slide">
+    <div class="kh-el kh-text kh-heading" style="left: 160px; top: 380px; width: 1600px; height: auto; font-size: 96px; text-align: center;"><div class="kh-body">keyhtml</div></div>
+    <div class="kh-el kh-text" style="left: 360px; top: 580px; width: 1200px; height: auto; font-size: 44px; text-align: center; color: var(--kh-muted);"><div class="kh-body">Keynote-style editing for self-contained HTML slide decks<br>vector PDF figures · LaTeX · movies · builds</div></div>
+    <aside class="kh-notes">Open this file in a browser to present. Press ? for keys, p for the presenter window.</aside>
+  </section>
+  <section class="kh-slide">
+    <div class="kh-el kh-text kh-heading" style="left: 110px; top: 70px; width: 1700px; height: auto; font-size: 72px;"><div class="kh-body">What you get</div></div>
+    <div class="kh-el kh-text" style="left: 110px; top: 240px; width: 1700px; height: 720px; font-size: 44px;"><div class="kh-body"><ul><li>Drop a PDF: it becomes vector SVG, sharp on any projector</li><li>Type LaTeX inline: <span class="kh-mi" data-tex="\hat A = (s^T C^{-1} s)^{-1} s^T C^{-1} d" data-display="0"><svg xmlns="http://www.w3.org/2000/svg" width="23.834ex" height="3.018ex" viewBox="0 -1084 10534.7 1334" style="vertical-align: -0.566ex;"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="TeXAtom" data-mjx-texclass="ORD"><g data-mml-node="mover"><g data-mml-node="mi"><path data-c="1D434" d="M208 74Q208 50 254 46Q272 46 272 35Q272 34 270 22Q267 8 264 4T251 0Q249 0 239 0T205 1T141 2Q70 2 50 0H42Q35 7 35 11Q37 38 48 46H62Q132 49 164 96Q170 102 345 401T523 704Q530 716 547 716H555H572Q578 707 578 706L606 383Q634 60 636 57Q641 46 701 46Q726 46 726 36Q726 34 723 22Q720 7 718 4T704 0Q701 0 690 0T651 1T578 2Q484 2 455 0H443Q437 6 437 9T439 27Q443 40 445 43L449 46H469Q523 49 533 63L521 213H283L249 155Q208 86 208 74ZM516 260Q516 271 504 416T490 562L463 519Q447 492 400 412L310 260L413 259Q516 259 516 260Z"></path></g><g data-mml-node="mo" transform="translate(514,290) translate(-250 0)"><path data-c="5E" d="M112 560L249 694L257 686Q387 562 387 560L361 531Q359 532 303 581L250 627L195 580Q182 569 169 557T148 538L140 532Q138 530 125 546L112 560Z"></path></g></g></g><g data-mml-node="mo" transform="translate(1027.8,0)"><path data-c="3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path></g><g data-mml-node="mo" transform="translate(2083.6,0)"><path data-c="28" d="M94 250Q94 319 104 381T127 488T164 576T202 643T244 695T277 729T302 750H315H319Q333 750 333 741Q333 738 316 720T275 667T226 581T184 443T167 250T184 58T225 -81T274 -167T316 -220T333 -241Q333 -250 318 -250H315H302L274 -226Q180 -141 137 -14T94 250Z"></path></g><g data-mml-node="msup" transform="translate(2472.6,0)"><g data-mml-node="mi"><path data-c="1D460" d="M131 289Q131 321 147 354T203 415T300 442Q362 442 390 415T419 355Q419 323 402 308T364 292Q351 292 340 300T328 326Q328 342 337 354T354 372T367 378Q368 378 368 379Q368 382 361 388T336 399T297 405Q249 405 227 379T204 326Q204 301 223 291T278 274T330 259Q396 230 396 163Q396 135 385 107T352 51T289 7T195 -10Q118 -10 86 19T53 87Q53 126 74 143T118 160Q133 160 146 151T160 120Q160 94 142 76T111 58Q109 57 108 57T107 55Q108 52 115 47T146 34T201 27Q237 27 263 38T301 66T318 97T323 122Q323 150 302 164T254 181T195 196T148 231Q131 256 131 289Z"></path></g><g data-mml-node="mi" transform="translate(502,363) scale(0.707)"><path data-c="1D447" d="M40 437Q21 437 21 445Q21 450 37 501T71 602L88 651Q93 669 101 677H569H659Q691 677 697 676T704 667Q704 661 687 553T668 444Q668 437 649 437Q640 437 637 437T631 442L629 445Q629 451 635 490T641 551Q641 586 628 604T573 629Q568 630 515 631Q469 631 457 630T439 622Q438 621 368 343T298 60Q298 48 386 46Q418 46 427 45T436 36Q436 31 433 22Q429 4 424 1L422 0Q419 0 415 0Q410 0 363 1T228 2Q99 2 64 0H49Q43 6 43 9T45 27Q49 40 55 46H83H94Q174 46 189 55Q190 56 191 56Q196 59 201 76T241 233Q258 301 269 344Q339 619 339 625Q339 630 310 630H279Q212 630 191 624Q146 614 121 583T67 467Q60 445 57 441T43 437H40Z"></path></g></g><g data-mml-node="msup" transform="translate(3522.4,0)"><g data-mml-node="mi"><path data-c="1D436" d="M50 252Q50 367 117 473T286 641T490 704Q580 704 633 653Q642 643 648 636T656 626L657 623Q660 623 684 649Q691 655 699 663T715 679T725 690L740 705H746Q760 705 760 698Q760 694 728 561Q692 422 692 421Q690 416 687 415T669 413H653Q647 419 647 422Q647 423 648 429T650 449T651 481Q651 552 619 605T510 659Q484 659 454 652T382 628T299 572T226 479Q194 422 175 346T156 222Q156 108 232 58Q280 24 350 24Q441 24 512 92T606 240Q610 253 612 255T628 257Q648 257 648 248Q648 243 647 239Q618 132 523 55T319 -22Q206 -22 128 53T50 252Z"></path></g><g data-mml-node="TeXAtom" transform="translate(845.3,363) scale(0.707)" data-mjx-texclass="ORD"><g data-mml-node="mo"><path data-c="2212" d="M84 237T84 250T98 270H679Q694 262 694 250T679 230H98Q84 237 84 250Z"></path></g><g data-mml-node="mn" transform="translate(778,0)"><path data-c="31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path></g></g></g><g data-mml-node="mi" transform="translate(5321.3,0)"><path data-c="1D460" d="M131 289Q131 321 147 354T203 415T300 442Q362 442 390 415T419 355Q419 323 402 308T364 292Q351 292 340 300T328 326Q328 342 337 354T354 372T367 378Q368 378 368 379Q368 382 361 388T336 399T297 405Q249 405 227 379T204 326Q204 301 223 291T278 274T330 259Q396 230 396 163Q396 135 385 107T352 51T289 7T195 -10Q118 -10 86 19T53 87Q53 126 74 143T118 160Q133 160 146 151T160 120Q160 94 142 76T111 58Q109 57 108 57T107 55Q108 52 115 47T146 34T201 27Q237 27 263 38T301 66T318 97T323 122Q323 150 302 164T254 181T195 196T148 231Q131 256 131 289Z"></path></g><g data-mml-node="msup" transform="translate(5790.3,0)"><g data-mml-node="mo"><path data-c="29" d="M60 749L64 750Q69 750 74 750H86L114 726Q208 641 251 514T294 250Q294 182 284 119T261 12T224 -76T186 -143T145 -194T113 -227T90 -246Q87 -249 86 -250H74Q66 -250 63 -250T58 -247T55 -238Q56 -237 66 -225Q221 -64 221 250T66 725Q56 737 55 738Q55 746 60 749Z"></path></g><g data-mml-node="TeXAtom" transform="translate(422,363) scale(0.707)" data-mjx-texclass="ORD"><g data-mml-node="mo"><path data-c="2212" d="M84 237T84 250T98 270H679Q694 262 694 250T679 230H98Q84 237 84 250Z"></path></g><g data-mml-node="mn" transform="translate(778,0)"><path data-c="31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path></g></g></g><g data-mml-node="msup" transform="translate(7166,0)"><g data-mml-node="mi"><path data-c="1D460" d="M131 289Q131 321 147 354T203 415T300 442Q362 442 390 415T419 355Q419 323 402 308T364 292Q351 292 340 300T328 326Q328 342 337 354T354 372T367 378Q368 378 368 379Q368 382 361 388T336 399T297 405Q249 405 227 379T204 326Q204 301 223 291T278 274T330 259Q396 230 396 163Q396 135 385 107T352 51T289 7T195 -10Q118 -10 86 19T53 87Q53 126 74 143T118 160Q133 160 146 151T160 120Q160 94 142 76T111 58Q109 57 108 57T107 55Q108 52 115 47T146 34T201 27Q237 27 263 38T301 66T318 97T323 122Q323 150 302 164T254 181T195 196T148 231Q131 256 131 289Z"></path></g><g data-mml-node="mi" transform="translate(502,363) scale(0.707)"><path data-c="1D447" d="M40 437Q21 437 21 445Q21 450 37 501T71 602L88 651Q93 669 101 677H569H659Q691 677 697 676T704 667Q704 661 687 553T668 444Q668 437 649 437Q640 437 637 437T631 442L629 445Q629 451 635 490T641 551Q641 586 628 604T573 629Q568 630 515 631Q469 631 457 630T439 622Q438 621 368 343T298 60Q298 48 386 46Q418 46 427 45T436 36Q436 31 433 22Q429 4 424 1L422 0Q419 0 415 0Q410 0 363 1T228 2Q99 2 64 0H49Q43 6 43 9T45 27Q49 40 55 46H83H94Q174 46 189 55Q190 56 191 56Q196 59 201 76T241 233Q258 301 269 344Q339 619 339 625Q339 630 310 630H279Q212 630 191 624Q146 614 121 583T67 467Q60 445 57 441T43 437H40Z"></path></g></g><g data-mml-node="msup" transform="translate(8215.8,0)"><g data-mml-node="mi"><path data-c="1D436" d="M50 252Q50 367 117 473T286 641T490 704Q580 704 633 653Q642 643 648 636T656 626L657 623Q660 623 684 649Q691 655 699 663T715 679T725 690L740 705H746Q760 705 760 698Q760 694 728 561Q692 422 692 421Q690 416 687 415T669 413H653Q647 419 647 422Q647 423 648 429T650 449T651 481Q651 552 619 605T510 659Q484 659 454 652T382 628T299 572T226 479Q194 422 175 346T156 222Q156 108 232 58Q280 24 350 24Q441 24 512 92T606 240Q610 253 612 255T628 257Q648 257 648 248Q648 243 647 239Q618 132 523 55T319 -22Q206 -22 128 53T50 252Z"></path></g><g data-mml-node="TeXAtom" transform="translate(845.3,363) scale(0.707)" data-mjx-texclass="ORD"><g data-mml-node="mo"><path data-c="2212" d="M84 237T84 250T98 270H679Q694 262 694 250T679 230H98Q84 237 84 250Z"></path></g><g data-mml-node="mn" transform="translate(778,0)"><path data-c="31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path></g></g></g><g data-mml-node="mi" transform="translate(10014.7,0)"><path data-c="1D451" d="M366 683Q367 683 438 688T511 694Q523 694 523 686Q523 679 450 384T375 83T374 68Q374 26 402 26Q411 27 422 35Q443 55 463 131Q469 151 473 152Q475 153 483 153H487H491Q506 153 506 145Q506 140 503 129Q490 79 473 48T445 8T417 -8Q409 -10 393 -10Q359 -10 336 5T306 36L300 51Q299 52 296 50Q294 48 292 46Q233 -10 172 -10Q117 -10 75 30T33 157Q33 205 53 255T101 341Q148 398 195 420T280 442Q336 442 364 400Q369 394 369 396Q370 400 396 505T424 616Q424 629 417 632T378 637H357Q351 643 351 645T353 664Q358 683 366 683ZM352 326Q329 405 277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q233 26 290 98L298 109L352 326Z"></path></g></g></g></svg></span>, with deck-wide macros like <span class="kh-mi" data-tex="1\,\Msun" data-display="0"><svg xmlns="http://www.w3.org/2000/svg" width="5.136ex" height="2.017ex" viewBox="0 -683 2270.1 891.7" style="vertical-align: -0.472ex;"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="mn"><path data-c="31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path></g><g data-mml-node="mstyle" transform="translate(500,0)"><g data-mml-node="mspace"></g></g><g data-mml-node="msub" transform="translate(667,0)"><g data-mml-node="mi"><path data-c="1D440" d="M289 629Q289 635 232 637Q208 637 201 638T194 648Q194 649 196 659Q197 662 198 666T199 671T201 676T203 679T207 681T212 683T220 683T232 684Q238 684 262 684T307 683Q386 683 398 683T414 678Q415 674 451 396L487 117L510 154Q534 190 574 254T662 394Q837 673 839 675Q840 676 842 678T846 681L852 683H948Q965 683 988 683T1017 684Q1051 684 1051 673Q1051 668 1048 656T1045 643Q1041 637 1008 637Q968 636 957 634T939 623Q936 618 867 340T797 59Q797 55 798 54T805 50T822 48T855 46H886Q892 37 892 35Q892 19 885 5Q880 0 869 0Q864 0 828 1T736 2Q675 2 644 2T609 1Q592 1 592 11Q592 13 594 25Q598 41 602 43T625 46Q652 46 685 49Q699 52 704 61Q706 65 742 207T813 490T848 631L654 322Q458 10 453 5Q451 4 449 3Q444 0 433 0Q418 0 415 7Q413 11 374 317L335 624L267 354Q200 88 200 79Q206 46 272 46H282Q288 41 289 37T286 19Q282 3 278 1Q274 0 267 0Q265 0 255 0T221 1T157 2Q127 2 95 1T58 0Q43 0 39 2T35 11Q35 13 38 25T43 40Q45 46 65 46Q135 46 154 86Q158 92 223 354T289 629Z"></path></g><g data-mml-node="mo" transform="translate(1003,-150) scale(0.707)"><path data-c="2299" d="M56 250Q56 394 156 488T384 583Q530 583 626 485T722 250Q722 110 625 14T390 -83Q249 -83 153 14T56 250ZM682 250Q682 322 649 387T546 497T381 542Q272 542 184 459T95 250Q95 132 178 45T389 -42Q515 -42 598 45T682 250ZM311 250Q311 285 332 304T375 328Q376 328 382 328T392 329Q424 326 445 305T466 250Q466 217 445 195T389 172Q354 172 333 195T311 250Z"></path></g></g></g></g></svg></span></li><li>Movies with autoplay, loop and a start offset</li><li>Builds, transitions, presenter notes, overview, print-to-PDF</li><li>Everything saved as readable HTML you can also hand-edit</li></ul></div></div>
+    <aside class="kh-notes"></aside>
+  </section>
+  <section class="kh-slide">
+    <div class="kh-el kh-text kh-heading" style="left: 110px; top: 70px; width: 1700px; height: auto; font-size: 72px;"><div class="kh-body">A matplotlib PDF, as vector graphics</div></div>
+    <div class="kh-el kh-text" style="left: 360px; top: 950px; width: 1200px; height: auto; font-size: 32px; text-align: center; color: var(--kh-muted);"><div class="kh-body">fig.pdf → fig.p1.svg (text as outlines). Zoom in while presenting: no pixels.</div></div>
+    <div class="kh-el kh-image" style="left: 360px; top: 200px; width: 1200px; height: 800px;"><img src="demo_assets/testfig.p1.svg" alt="testfig.pdf" data-pdf="demo_assets/testfig.pdf" data-page="1" data-pages="1"></div>
+    <aside class="kh-notes"></aside>
+  </section>
+  <section class="kh-slide">
+    <div class="kh-el kh-text kh-heading" style="left: 110px; top: 70px; width: 1700px; height: auto; font-size: 72px;"><div class="kh-body">Equations</div></div>
+    <div class="kh-el kh-math" data-tex="\mathrm{SNR}^2 = \sum_i \frac{s_i^2}{\sigma_i^2}, \qquad \sigma_A = \frac{1}{\sqrt{s^T C^{-1} s}}" data-fs="72" data-hex="6.286" data-wex="37.203" style="left: 368px; top: 370px; width: 1183.9px; height: 200px;"><svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 -1586.1 16443.6 2778.3" preserveAspectRatio="xMidYMid meet"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="msup"><g data-mml-node="TeXAtom" data-mjx-texclass="ORD"><g data-mml-node="mi"><path data-c="53" d="M55 507Q55 590 112 647T243 704H257Q342 704 405 641L426 672Q431 679 436 687T446 700L449 704Q450 704 453 704T459 705H463Q466 705 472 699V462L466 456H448Q437 456 435 459T430 479Q413 605 329 646Q292 662 254 662Q201 662 168 626T135 542Q135 508 152 480T200 435Q210 431 286 412T370 389Q427 367 463 314T500 191Q500 110 448 45T301 -21Q245 -21 201 -4T140 27L122 41Q118 36 107 21T87 -7T78 -21Q76 -22 68 -22H64Q61 -22 55 -16V101Q55 220 56 222Q58 227 76 227H89Q95 221 95 214Q95 182 105 151T139 90T205 42T305 24Q352 24 386 62T420 155Q420 198 398 233T340 281Q284 295 266 300Q261 301 239 306T206 314T174 325T141 343T112 367T85 402Q55 451 55 507Z"></path><path data-c="4E" d="M42 46Q74 48 94 56T118 69T128 86V634H124Q114 637 52 637H25V683H232L235 680Q237 679 322 554T493 303L578 178V598Q572 608 568 613T544 627T492 637H475V683H483Q498 680 600 680Q706 680 715 683H724V637H707Q634 633 622 598L621 302V6L614 0H600Q585 0 582 3T481 150T282 443T171 605V345L172 86Q183 50 257 46H274V0H265Q250 3 150 3Q48 3 33 0H25V46H42Z" transform="translate(556,0)"></path><path data-c="52" d="M130 622Q123 629 119 631T103 634T60 637H27V683H202H236H300Q376 683 417 677T500 648Q595 600 609 517Q610 512 610 501Q610 468 594 439T556 392T511 361T472 343L456 338Q459 335 467 332Q497 316 516 298T545 254T559 211T568 155T578 94Q588 46 602 31T640 16H645Q660 16 674 32T692 87Q692 98 696 101T712 105T728 103T732 90Q732 59 716 27T672 -16Q656 -22 630 -22Q481 -16 458 90Q456 101 456 163T449 246Q430 304 373 320L363 322L297 323H231V192L232 61Q238 51 249 49T301 46H334V0H323Q302 3 181 3Q59 3 38 0H27V46H60Q102 47 111 49T130 61V622ZM491 499V509Q491 527 490 539T481 570T462 601T424 623T362 636Q360 636 340 636T304 637H283Q238 637 234 628Q231 624 231 492V360H289Q390 360 434 378T489 456Q491 467 491 499Z" transform="translate(1306,0)"></path></g></g><g data-mml-node="mn" transform="translate(2075,432.1) scale(0.707)"><path data-c="32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path></g></g><g data-mml-node="mo" transform="translate(2756.3,0)"><path data-c="3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path></g><g data-mml-node="munder" transform="translate(3812.1,0)"><g data-mml-node="mo"><path data-c="2211" d="M60 948Q63 950 665 950H1267L1325 815Q1384 677 1388 669H1348L1341 683Q1320 724 1285 761Q1235 809 1174 838T1033 881T882 898T699 902H574H543H251L259 891Q722 258 724 252Q725 250 724 246Q721 243 460 -56L196 -356Q196 -357 407 -357Q459 -357 548 -357T676 -358Q812 -358 896 -353T1063 -332T1204 -283T1307 -196Q1328 -170 1348 -124H1388Q1388 -125 1381 -145T1356 -210T1325 -294L1267 -449L666 -450Q64 -450 61 -448Q55 -446 55 -439Q55 -437 57 -433L590 177Q590 178 557 222T452 366T322 544L56 909L55 924Q55 945 60 948Z"></path></g><g data-mml-node="mi" transform="translate(600,-1084.4) scale(0.707)"><path data-c="1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path></g></g><g data-mml-node="mfrac" transform="translate(5422.8,0)"><g data-mml-node="msubsup" transform="translate(271,752.2)"><g data-mml-node="mi"><path data-c="1D460" d="M131 289Q131 321 147 354T203 415T300 442Q362 442 390 415T419 355Q419 323 402 308T364 292Q351 292 340 300T328 326Q328 342 337 354T354 372T367 378Q368 378 368 379Q368 382 361 388T336 399T297 405Q249 405 227 379T204 326Q204 301 223 291T278 274T330 259Q396 230 396 163Q396 135 385 107T352 51T289 7T195 -10Q118 -10 86 19T53 87Q53 126 74 143T118 160Q133 160 146 151T160 120Q160 94 142 76T111 58Q109 57 108 57T107 55Q108 52 115 47T146 34T201 27Q237 27 263 38T301 66T318 97T323 122Q323 150 302 164T254 181T195 196T148 231Q131 256 131 289Z"></path></g><g data-mml-node="mn" transform="translate(502,363) scale(0.707)"><path data-c="32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path></g><g data-mml-node="mi" transform="translate(502,-284.4) scale(0.707)"><path data-c="1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path></g></g><g data-mml-node="msubsup" transform="translate(220,-784.5)"><g data-mml-node="mi"><path data-c="1D70E" d="M184 -11Q116 -11 74 34T31 147Q31 247 104 333T274 430Q275 431 414 431H552Q553 430 555 429T559 427T562 425T565 422T567 420T569 416T570 412T571 407T572 401Q572 357 507 357Q500 357 490 357T476 358H416L421 348Q439 310 439 263Q439 153 359 71T184 -11ZM361 278Q361 358 276 358Q152 358 115 184Q114 180 114 178Q106 141 106 117Q106 67 131 47T188 26Q242 26 287 73Q316 103 334 153T356 233T361 278Z"></path></g><g data-mml-node="mn" transform="translate(604,353.6) scale(0.707)"><path data-c="32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path></g><g data-mml-node="mi" transform="translate(604,-293.8) scale(0.707)"><path data-c="1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path></g></g><rect width="1207.6" height="60" x="120" y="220"></rect></g><g data-mml-node="mo" transform="translate(6870.3,0)"><path data-c="2C" d="M78 35T78 60T94 103T137 121Q165 121 187 96T210 8Q210 -27 201 -60T180 -117T154 -158T130 -185T117 -194Q113 -194 104 -185T95 -172Q95 -168 106 -156T131 -126T157 -76T173 -3V9L172 8Q170 7 167 6T161 3T152 1T140 0Q113 0 96 17Z"></path></g><g data-mml-node="mstyle" transform="translate(7148.3,0)"><g data-mml-node="mspace"></g></g><g data-mml-node="msub" transform="translate(9315,0)"><g data-mml-node="mi"><path data-c="1D70E" d="M184 -11Q116 -11 74 34T31 147Q31 247 104 333T274 430Q275 431 414 431H552Q553 430 555 429T559 427T562 425T565 422T567 420T569 416T570 412T571 407T572 401Q572 357 507 357Q500 357 490 357T476 358H416L421 348Q439 310 439 263Q439 153 359 71T184 -11ZM361 278Q361 358 276 358Q152 358 115 184Q114 180 114 178Q106 141 106 117Q106 67 131 47T188 26Q242 26 287 73Q316 103 334 153T356 233T361 278Z"></path></g><g data-mml-node="mi" transform="translate(604,-152.7) scale(0.707)"><path data-c="1D434" d="M208 74Q208 50 254 46Q272 46 272 35Q272 34 270 22Q267 8 264 4T251 0Q249 0 239 0T205 1T141 2Q70 2 50 0H42Q35 7 35 11Q37 38 48 46H62Q132 49 164 96Q170 102 345 401T523 704Q530 716 547 716H555H572Q578 707 578 706L606 383Q634 60 636 57Q641 46 701 46Q726 46 726 36Q726 34 723 22Q720 7 718 4T704 0Q701 0 690 0T651 1T578 2Q484 2 455 0H443Q437 6 437 9T439 27Q443 40 445 43L449 46H469Q523 49 533 63L521 213H283L249 155Q208 86 208 74ZM516 260Q516 271 504 416T490 562L463 519Q447 492 400 412L310 260L413 259Q516 259 516 260Z"></path></g></g><g data-mml-node="mo" transform="translate(10777.1,0)"><path data-c="3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path></g><g data-mml-node="mfrac" transform="translate(11832.9,0)"><g data-mml-node="mn" transform="translate(2055.4,676)"><path data-c="31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path></g><g data-mml-node="msqrt" transform="translate(220,-960.4)"><g transform="translate(853,0)"><g data-mml-node="msup"><g data-mml-node="mi"><path data-c="1D460" d="M131 289Q131 321 147 354T203 415T300 442Q362 442 390 415T419 355Q419 323 402 308T364 292Q351 292 340 300T328 326Q328 342 337 354T354 372T367 378Q368 378 368 379Q368 382 361 388T336 399T297 405Q249 405 227 379T204 326Q204 301 223 291T278 274T330 259Q396 230 396 163Q396 135 385 107T352 51T289 7T195 -10Q118 -10 86 19T53 87Q53 126 74 143T118 160Q133 160 146 151T160 120Q160 94 142 76T111 58Q109 57 108 57T107 55Q108 52 115 47T146 34T201 27Q237 27 263 38T301 66T318 97T323 122Q323 150 302 164T254 181T195 196T148 231Q131 256 131 289Z"></path></g><g data-mml-node="mi" transform="translate(502,289) scale(0.707)"><path data-c="1D447" d="M40 437Q21 437 21 445Q21 450 37 501T71 602L88 651Q93 669 101 677H569H659Q691 677 697 676T704 667Q704 661 687 553T668 444Q668 437 649 437Q640 437 637 437T631 442L629 445Q629 451 635 490T641 551Q641 586 628 604T573 629Q568 630 515 631Q469 631 457 630T439 622Q438 621 368 343T298 60Q298 48 386 46Q418 46 427 45T436 36Q436 31 433 22Q429 4 424 1L422 0Q419 0 415 0Q410 0 363 1T228 2Q99 2 64 0H49Q43 6 43 9T45 27Q49 40 55 46H83H94Q174 46 189 55Q190 56 191 56Q196 59 201 76T241 233Q258 301 269 344Q339 619 339 625Q339 630 310 630H279Q212 630 191 624Q146 614 121 583T67 467Q60 445 57 441T43 437H40Z"></path></g></g><g data-mml-node="msup" transform="translate(1049.8,0)"><g data-mml-node="mi"><path data-c="1D436" d="M50 252Q50 367 117 473T286 641T490 704Q580 704 633 653Q642 643 648 636T656 626L657 623Q660 623 684 649Q691 655 699 663T715 679T725 690L740 705H746Q760 705 760 698Q760 694 728 561Q692 422 692 421Q690 416 687 415T669 413H653Q647 419 647 422Q647 423 648 429T650 449T651 481Q651 552 619 605T510 659Q484 659 454 652T382 628T299 572T226 479Q194 422 175 346T156 222Q156 108 232 58Q280 24 350 24Q441 24 512 92T606 240Q610 253 612 255T628 257Q648 257 648 248Q648 243 647 239Q618 132 523 55T319 -22Q206 -22 128 53T50 252Z"></path></g><g data-mml-node="TeXAtom" transform="translate(845.3,289) scale(0.707)" data-mjx-texclass="ORD"><g data-mml-node="mo"><path data-c="2212" d="M84 237T84 250T98 270H679Q694 262 694 250T679 230H98Q84 237 84 250Z"></path></g><g data-mml-node="mn" transform="translate(778,0)"><path data-c="31" d="M213 578L200 573Q186 568 160 563T102 556H83V602H102Q149 604 189 617T245 641T273 663Q275 666 285 666Q294 666 302 660V361L303 61Q310 54 315 52T339 48T401 46H427V0H416Q395 3 257 3Q121 3 100 0H88V46H114Q136 46 152 46T177 47T193 50T201 52T207 57T213 61V578Z"></path></g></g></g><g data-mml-node="mi" transform="translate(2848.7,0)"><path data-c="1D460" d="M131 289Q131 321 147 354T203 415T300 442Q362 442 390 415T419 355Q419 323 402 308T364 292Q351 292 340 300T328 326Q328 342 337 354T354 372T367 378Q368 378 368 379Q368 382 361 388T336 399T297 405Q249 405 227 379T204 326Q204 301 223 291T278 274T330 259Q396 230 396 163Q396 135 385 107T352 51T289 7T195 -10Q118 -10 86 19T53 87Q53 126 74 143T118 160Q133 160 146 151T160 120Q160 94 142 76T111 58Q109 57 108 57T107 55Q108 52 115 47T146 34T201 27Q237 27 263 38T301 66T318 97T323 122Q323 150 302 164T254 181T195 196T148 231Q131 256 131 289Z"></path></g></g><g data-mml-node="mo" transform="translate(0,140.4)"><path data-c="221A" d="M95 178Q89 178 81 186T72 200T103 230T169 280T207 309Q209 311 212 311H213Q219 311 227 294T281 177Q300 134 312 108L397 -77Q398 -77 501 136T707 565T814 786Q820 800 834 800Q841 800 846 794T853 782V776L620 293L385 -193Q381 -200 366 -200Q357 -200 354 -197Q352 -195 256 15L160 225L144 214Q129 202 113 190T95 178Z"></path></g><rect width="3317.7" height="60" x="853" y="880.4"></rect></g><rect width="4370.7" height="60" x="120" y="220"></rect></g></g></g></svg></div>
+    <div class="kh-el kh-text" style="left: 210px; top: 720px; width: 1500px; height: auto; font-size: 36px; text-align: center; color: var(--kh-muted);"><div class="kh-body">Standalone equations are MathJax SVG; inline math works in any text box: <span class="kh-mi" data-tex="\chi^2 = \sum_i (d_i - A s_i)^2/\sigma_i^2" data-display="0"><svg xmlns="http://www.w3.org/2000/svg" width="22.888ex" height="2.55ex" viewBox="0 -833.9 10116.5 1127.1" style="vertical-align: -0.663ex;"><g stroke="currentColor" fill="currentColor" stroke-width="0" transform="scale(1,-1)"><g data-mml-node="math"><g data-mml-node="msup"><g data-mml-node="mi"><path data-c="1D712" d="M576 -125Q576 -147 547 -175T487 -204H476Q394 -204 363 -157Q334 -114 293 26L284 59Q283 58 248 19T170 -66T92 -151T53 -191Q49 -194 43 -194Q36 -194 31 -189T25 -177T38 -154T151 -30L272 102L265 131Q189 405 135 405Q104 405 87 358Q86 351 68 351Q48 351 48 361Q48 369 56 386T89 423T148 442Q224 442 258 400Q276 375 297 320T330 222L341 180Q344 180 455 303T573 429Q579 431 582 431Q600 431 600 414Q600 407 587 392T477 270Q356 138 353 134L362 102Q392 -10 428 -89T490 -168Q504 -168 517 -156T536 -126Q539 -116 543 -115T557 -114T571 -115Q576 -118 576 -125Z"></path></g><g data-mml-node="mn" transform="translate(659,363) scale(0.707)"><path data-c="32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path></g></g><g data-mml-node="mo" transform="translate(1340.3,0)"><path data-c="3D" d="M56 347Q56 360 70 367H707Q722 359 722 347Q722 336 708 328L390 327H72Q56 332 56 347ZM56 153Q56 168 72 173H708Q722 163 722 153Q722 140 707 133H70Q56 140 56 153Z"></path></g><g data-mml-node="munder" transform="translate(2396.1,0)"><g data-mml-node="mo"><path data-c="2211" d="M61 748Q64 750 489 750H913L954 640Q965 609 976 579T993 533T999 516H979L959 517Q936 579 886 621T777 682Q724 700 655 705T436 710H319Q183 710 183 709Q186 706 348 484T511 259Q517 250 513 244L490 216Q466 188 420 134T330 27L149 -187Q149 -188 362 -188Q388 -188 436 -188T506 -189Q679 -189 778 -162T936 -43Q946 -27 959 6H999L913 -249L489 -250Q65 -250 62 -248Q56 -246 56 -239Q56 -234 118 -161Q186 -81 245 -11L428 206Q428 207 242 462L57 717L56 728Q56 744 61 748Z"></path></g><g data-mml-node="mi" transform="translate(1089,-285.4) scale(0.707)"><path data-c="1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path></g></g><g data-mml-node="mo" transform="translate(3779.1,0)"><path data-c="28" d="M94 250Q94 319 104 381T127 488T164 576T202 643T244 695T277 729T302 750H315H319Q333 750 333 741Q333 738 316 720T275 667T226 581T184 443T167 250T184 58T225 -81T274 -167T316 -220T333 -241Q333 -250 318 -250H315H302L274 -226Q180 -141 137 -14T94 250Z"></path></g><g data-mml-node="msub" transform="translate(4168.1,0)"><g data-mml-node="mi"><path data-c="1D451" d="M366 683Q367 683 438 688T511 694Q523 694 523 686Q523 679 450 384T375 83T374 68Q374 26 402 26Q411 27 422 35Q443 55 463 131Q469 151 473 152Q475 153 483 153H487H491Q506 153 506 145Q506 140 503 129Q490 79 473 48T445 8T417 -8Q409 -10 393 -10Q359 -10 336 5T306 36L300 51Q299 52 296 50Q294 48 292 46Q233 -10 172 -10Q117 -10 75 30T33 157Q33 205 53 255T101 341Q148 398 195 420T280 442Q336 442 364 400Q369 394 369 396Q370 400 396 505T424 616Q424 629 417 632T378 637H357Q351 643 351 645T353 664Q358 683 366 683ZM352 326Q329 405 277 405Q242 405 210 374T160 293Q131 214 119 129Q119 126 119 118T118 106Q118 61 136 44T179 26Q233 26 290 98L298 109L352 326Z"></path></g><g data-mml-node="mi" transform="translate(553,-150) scale(0.707)"><path data-c="1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path></g></g><g data-mml-node="mo" transform="translate(5237.2,0)"><path data-c="2212" d="M84 237T84 250T98 270H679Q694 262 694 250T679 230H98Q84 237 84 250Z"></path></g><g data-mml-node="mi" transform="translate(6237.5,0)"><path data-c="1D434" d="M208 74Q208 50 254 46Q272 46 272 35Q272 34 270 22Q267 8 264 4T251 0Q249 0 239 0T205 1T141 2Q70 2 50 0H42Q35 7 35 11Q37 38 48 46H62Q132 49 164 96Q170 102 345 401T523 704Q530 716 547 716H555H572Q578 707 578 706L606 383Q634 60 636 57Q641 46 701 46Q726 46 726 36Q726 34 723 22Q720 7 718 4T704 0Q701 0 690 0T651 1T578 2Q484 2 455 0H443Q437 6 437 9T439 27Q443 40 445 43L449 46H469Q523 49 533 63L521 213H283L249 155Q208 86 208 74ZM516 260Q516 271 504 416T490 562L463 519Q447 492 400 412L310 260L413 259Q516 259 516 260Z"></path></g><g data-mml-node="msub" transform="translate(6987.5,0)"><g data-mml-node="mi"><path data-c="1D460" d="M131 289Q131 321 147 354T203 415T300 442Q362 442 390 415T419 355Q419 323 402 308T364 292Q351 292 340 300T328 326Q328 342 337 354T354 372T367 378Q368 378 368 379Q368 382 361 388T336 399T297 405Q249 405 227 379T204 326Q204 301 223 291T278 274T330 259Q396 230 396 163Q396 135 385 107T352 51T289 7T195 -10Q118 -10 86 19T53 87Q53 126 74 143T118 160Q133 160 146 151T160 120Q160 94 142 76T111 58Q109 57 108 57T107 55Q108 52 115 47T146 34T201 27Q237 27 263 38T301 66T318 97T323 122Q323 150 302 164T254 181T195 196T148 231Q131 256 131 289Z"></path></g><g data-mml-node="mi" transform="translate(502,-150) scale(0.707)"><path data-c="1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path></g></g><g data-mml-node="msup" transform="translate(7783.4,0)"><g data-mml-node="mo"><path data-c="29" d="M60 749L64 750Q69 750 74 750H86L114 726Q208 641 251 514T294 250Q294 182 284 119T261 12T224 -76T186 -143T145 -194T113 -227T90 -246Q87 -249 86 -250H74Q66 -250 63 -250T58 -247T55 -238Q56 -237 66 -225Q221 -64 221 250T66 725Q56 737 55 738Q55 746 60 749Z"></path></g><g data-mml-node="mn" transform="translate(422,363) scale(0.707)"><path data-c="32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path></g></g><g data-mml-node="TeXAtom" data-mjx-texclass="ORD" transform="translate(8609,0)"><g data-mml-node="mo"><path data-c="2F" d="M423 750Q432 750 438 744T444 730Q444 725 271 248T92 -240Q85 -250 75 -250Q68 -250 62 -245T56 -231Q56 -221 230 257T407 740Q411 750 423 750Z"></path></g></g><g data-mml-node="msubsup" transform="translate(9109,0)"><g data-mml-node="mi"><path data-c="1D70E" d="M184 -11Q116 -11 74 34T31 147Q31 247 104 333T274 430Q275 431 414 431H552Q553 430 555 429T559 427T562 425T565 422T567 420T569 416T570 412T571 407T572 401Q572 357 507 357Q500 357 490 357T476 358H416L421 348Q439 310 439 263Q439 153 359 71T184 -11ZM361 278Q361 358 276 358Q152 358 115 184Q114 180 114 178Q106 141 106 117Q106 67 131 47T188 26Q242 26 287 73Q316 103 334 153T356 233T361 278Z"></path></g><g data-mml-node="mn" transform="translate(604,363) scale(0.707)"><path data-c="32" d="M109 429Q82 429 66 447T50 491Q50 562 103 614T235 666Q326 666 387 610T449 465Q449 422 429 383T381 315T301 241Q265 210 201 149L142 93L218 92Q375 92 385 97Q392 99 409 186V189H449V186Q448 183 436 95T421 3V0H50V19V31Q50 38 56 46T86 81Q115 113 136 137Q145 147 170 174T204 211T233 244T261 278T284 308T305 340T320 369T333 401T340 431T343 464Q343 527 309 573T212 619Q179 619 154 602T119 569T109 550Q109 549 114 549Q132 549 151 535T170 489Q170 464 154 447T109 429Z"></path></g><g data-mml-node="mi" transform="translate(604,-284.4) scale(0.707)"><path data-c="1D456" d="M184 600Q184 624 203 642T247 661Q265 661 277 649T290 619Q290 596 270 577T226 557Q211 557 198 567T184 600ZM21 287Q21 295 30 318T54 369T98 420T158 442Q197 442 223 419T250 357Q250 340 236 301T196 196T154 83Q149 61 149 51Q149 26 166 26Q175 26 185 29T208 43T235 78T260 137Q263 149 265 151T282 153Q302 153 302 143Q302 135 293 112T268 61T223 11T161 -11Q129 -11 102 10T74 74Q74 91 79 106T122 220Q160 321 166 341T173 380Q173 404 156 404H154Q124 404 99 371T61 287Q60 286 59 284T58 281T56 279T53 278T49 278T41 278H27Q21 284 21 287Z"></path></g></g></g></g></svg></span>.</div></div>
+    <aside class="kh-notes"></aside>
+  </section>
+  <section class="kh-slide">
+    <div class="kh-el kh-text kh-heading" style="left: 110px; top: 70px; width: 1700px; height: auto; font-size: 72px;"><div class="kh-body">Movies</div></div>
+    <div class="kh-el kh-video" style="left: 400px; top: 230px; width: 1120px; height: 630px;"><video src="demo_assets/testmovie.mp4" controls="" preload="metadata" playsinline="" data-autoplay="1" loop="" muted=""></video></div>
+    <aside class="kh-notes">The movie autoplays (muted, looping) when the slide appears.</aside>
+  </section>
+  <section class="kh-slide">
+    <div class="kh-el kh-text kh-heading" style="left: 110px; top: 70px; width: 1700px; height: auto; font-size: 72px;"><div class="kh-body">Shapes and builds (press → to reveal)</div></div>
+    <div class="kh-el kh-shape kh-shape-rect" data-build="1" data-build-effect="rise" style="left: 240px; top: 380px; width: 400px; height: 260px; background: rgb(74, 144, 217); border-radius: 24px; color: rgb(255, 255, 255); font-size: 48px;"><div class="kh-body">data</div></div>
+    <div class="kh-el kh-shape kh-shape-ellipse" data-build="2" data-build-effect="pop" style="left: 760px; top: 380px; width: 400px; height: 260px; background: rgb(245, 166, 35); border-radius: 24px; color: rgb(255, 255, 255); font-size: 48px;"><div class="kh-body">template</div></div>
+    <div class="kh-el kh-shape kh-shape-rect" data-build="3" data-build-effect="fade" style="left: 1280px; top: 380px; width: 400px; height: 260px; background: rgb(126, 211, 33); border-radius: 24px; color: rgb(255, 255, 255); font-size: 48px;"><div class="kh-body">SNR</div></div>
+    <div class="kh-el kh-shape kh-shape-line" data-stroke="#1d1d1f" data-stroke-width="8" data-arrow="end" style="left: 650px; top: 490px; width: 100px; height: 40px;" data-build="2"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="78.24" y2="20" stroke="#1d1d1f" stroke-width="8"></line><path d="M100,20 L74.4,7.199999999999999 L74.4,32.8 Z" fill="#1d1d1f" stroke="none"></path></svg></div>
+    <div class="kh-el kh-shape kh-shape-line" data-stroke="#1d1d1f" data-stroke-width="8" data-arrow="end" style="left: 1170px; top: 490px; width: 100px; height: 40px;" data-build="3"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 40" preserveAspectRatio="none"><line x1="0" y1="20" x2="78.24" y2="20" stroke="#1d1d1f" stroke-width="8"></line><path d="M100,20 L74.4,7.199999999999999 L74.4,32.8 Z" fill="#1d1d1f" stroke="none"></path></svg></div>
+    <div class="kh-el kh-text" style="left: 210px; top: 760px; width: 1500px; height: auto; font-size: 34px; text-align: center; color: var(--kh-muted);"><div class="kh-body">Set the build order in the Animate tab. The orange badge shows the step.</div></div>
+    <aside class="kh-notes"></aside>
+  </section>
+  <section class="kh-slide" style="background: var(--kh-accent);">
+    <div class="kh-el kh-text kh-heading" style="left: 160px; top: 440px; width: 1600px; height: auto; font-size: 110px; text-align: center; color: rgb(255, 255, 255);"><div class="kh-body">Present from the file itself</div></div>
+    <aside class="kh-notes">No server needed to present: open demo.html in any browser. Keys: arrows, f, o, b, p, ?. Add ?print to the URL to save a PDF.</aside>
+  </section>
+</div>
+<script id="kh-player-js">
+/* keyhtml player runtime. Embedded in every saved deck; no external dependencies.
+   Keys: → ↓ space PgDn: next · ← ↑ PgUp: prev · Home/End · f: fullscreen · o/Esc: overview
+         b: black · p: presenter window · ?: help · digits+Enter: go to slide
+   URL: deck.html#7 opens slide 7 · ?presenter presenter view · ?print one slide per page */
+(function () {
+  'use strict';
+  if (window.__khPlayer) return;
+  var deck = document.querySelector('.kh-deck');
+  if (!deck) return;
+  window.__khPlayer = true;
+
+  var W = parseInt(deck.getAttribute('data-width'), 10) || 1920;
+  var H = parseInt(deck.getAttribute('data-height'), 10) || 1080;
+  var params = new URLSearchParams(location.search);
+  var mode = params.has('print') ? 'print' : params.has('presenter') ? 'presenter' : 'play';
+  var allSlides = Array.prototype.slice.call(deck.querySelectorAll('.kh-slide'));
+  var slides = mode === 'print' ? allSlides : allSlides.filter(function (s) { return !s.hasAttribute('data-skip'); });
+  if (!slides.length) slides = allSlides;
+  var cur = 0, step = 0;
+  var presenterWin = null, overviewEl = null, blackEl = null, helpEl = null, numEl = null;
+  var digitBuffer = '', digitTimer = null, cursorTimer = null;
+
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  function el(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+
+  // ---- builds -------------------------------------------------------------
+  function buildEls(slide) {
+    return Array.prototype.slice.call(slide.querySelectorAll('.kh-el[data-build]')).filter(function (e) {
+      return (parseInt(e.getAttribute('data-build'), 10) || 0) > 0;
+    });
+  }
+  function maxStep(slide) {
+    var m = 0;
+    buildEls(slide).forEach(function (e) { m = Math.max(m, parseInt(e.getAttribute('data-build'), 10) || 0); });
+    return m;
+  }
+  function applyBuilds(slide, s, animate) {
+    buildEls(slide).forEach(function (e) {
+      var b = parseInt(e.getAttribute('data-build'), 10) || 0;
+      var hidden = b > s;
+      var was = e.classList.contains('kh-hidden');
+      e.classList.toggle('kh-hidden', hidden);
+      e.classList.remove('kh-build-in');
+      if (animate && was && !hidden) { void e.offsetWidth; e.classList.add('kh-build-in'); }
+    });
+  }
+
+  // ---- media ----------------------------------------------------------------
+  function mediaIn(slide) {
+    if (mode !== 'play') return;
+    Array.prototype.forEach.call(slide.querySelectorAll('video,audio'), function (v) {
+      var box = v.closest('.kh-el');
+      if (box && box.classList.contains('kh-hidden')) { v.pause(); return; }
+      if (v.hasAttribute('data-autoplay') && !v.__khPlayed) {
+        v.__khPlayed = true;
+        try { v.currentTime = parseFloat(v.getAttribute('data-start')) || 0; } catch (e) {}
+        var p = v.play(); if (p && p.catch) p.catch(function () {});
+      }
+    });
+  }
+  function mediaOut(slide) {
+    Array.prototype.forEach.call(slide.querySelectorAll('video,audio'), function (v) {
+      v.pause(); v.__khPlayed = false;
+      try { v.currentTime = parseFloat(v.getAttribute('data-start')) || 0; } catch (e) {}
+    });
+  }
+  if (mode === 'play') {
+    Array.prototype.forEach.call(deck.querySelectorAll('video'), function (v) {
+      v.addEventListener('click', function (ev) {
+        if (v.hasAttribute('controls')) return;
+        ev.stopPropagation();
+        if (v.paused) { var p = v.play(); if (p && p.catch) p.catch(function () {}); } else v.pause();
+      });
+    });
+  } else {
+    Array.prototype.forEach.call(deck.querySelectorAll('video,audio'), function (v) { v.muted = true; v.removeAttribute('autoplay'); });
+  }
+
+  // ---- imported section decks: keep their wrapper's show/hide classes in sync ----
+  var wraps = Array.prototype.slice.call(deck.querySelectorAll('[data-kh-wrap]'));
+  var asserting = false;
+  function assertWraps() {
+    if (!wraps.length || asserting) return;
+    asserting = true;
+    wraps.forEach(function (w) {
+      var s = w.closest('.kh-slide');
+      var on = !!(s && (s.classList.contains('kh-current') || mode === 'print'));
+      w.classList.toggle('on', on); w.classList.toggle('active', on);
+    });
+    asserting = false;
+  }
+  if (wraps.length && window.MutationObserver) {
+    new MutationObserver(function () { assertWraps(); }).observe(deck, { attributes: true, attributeFilter: ['class'], subtree: true });
+  }
+
+  // ---- navigation -----------------------------------------------------------
+  var transTimer = null;
+  function show(n, s, dir, silent) {
+    n = Math.max(0, Math.min(slides.length - 1, n | 0));
+    var slide = slides[n], prevSlide = slides[cur];
+    var same = (n === cur && slide.classList.contains('kh-current'));
+    if (s == null) s = 0;
+    s = Math.max(0, Math.min(maxStep(slide), s | 0));
+    if (!same) {
+      var trans = slide.getAttribute('data-transition') || deck.getAttribute('data-transition') || 'none';
+      if (dir === 0 || mode !== 'play') trans = 'none';
+      allSlides.forEach(function (x) { x.classList.remove('kh-leaving', 'kh-enter'); });
+      deck.setAttribute('data-kh-trans', trans);
+      deck.classList.toggle('kh-back', dir < 0);
+      if (prevSlide && prevSlide !== slide) {
+        mediaOut(prevSlide);
+        prevSlide.classList.remove('kh-current');
+        if (trans !== 'none') prevSlide.classList.add('kh-leaving');
+      }
+      slide.classList.add('kh-current');
+      assertWraps();
+      if (trans !== 'none') slide.classList.add('kh-enter');
+      clearTimeout(transTimer);
+      transTimer = setTimeout(function () { allSlides.forEach(function (x) { x.classList.remove('kh-leaving', 'kh-enter'); }); }, 700);
+    }
+    var animate = same && s > step;
+    var prevIndex = cur, prevStep = step;
+    cur = n; step = s;
+    applyBuilds(slide, s, animate);
+    mediaIn(slide);
+    updateHash(); updateNum();
+    if (!silent) notifyPresenter();
+    if (mode === 'presenter') updatePresenter();
+    hook('kh:slide', { index: cur, step: step, slide: slide, keep: same, from: prevIndex, fromStep: prevStep, mode: mode });
+  }
+  /* Hooks for custom deck scripts: 'kh:next'/'kh:prev' are cancelable (preventDefault()
+     to handle the keypress yourself, e.g. a JS-driven build); 'kh:slide' fires after a change. */
+  function hook(name, detail, cancelable) {
+    var ev = new CustomEvent(name, { detail: detail, cancelable: !!cancelable });
+    document.dispatchEvent(ev);
+    return !ev.defaultPrevented;
+  }
+  function next() {
+    var slide = slides[cur];
+    if (!hook('kh:next', { index: cur, step: step, slide: slide }, true)) return;
+    if (step < maxStep(slide)) show(cur, step + 1, 1);
+    else if (cur < slides.length - 1) show(cur + 1, 0, 1);
+  }
+  function prev() {
+    if (!hook('kh:prev', { index: cur, step: step, slide: slides[cur] }, true)) return;
+    if (step > 0) show(cur, step - 1, -1);
+    else if (cur > 0) show(cur - 1, maxStep(slides[cur - 1]), -1);
+  }
+  function updateHash() {
+    var h = '#' + (cur + 1);
+    if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) { location.hash = h; } }
+  }
+  function slideFromHash() {
+    var m = /^#(\d+)/.exec(location.hash || '');
+    return m ? Math.max(0, Math.min(slides.length - 1, parseInt(m[1], 10) - 1)) : 0;
+  }
+  function updateNum() {
+    if (!numEl) return;
+    numEl.textContent = (cur + 1) + ' / ' + slides.length;
+  }
+
+  // ---- layout ---------------------------------------------------------------
+  function fitInto(container, node, pad) {
+    var cw = container.clientWidth - (pad || 0) * 2, ch = container.clientHeight - (pad || 0) * 2;
+    var s = Math.min(cw / W, ch / H);
+    node.style.transform = 'scale(' + s + ')';
+    node.style.left = Math.round((container.clientWidth - W * s) / 2) + 'px';
+    node.style.top = Math.round((container.clientHeight - H * s) / 2) + 'px';
+    node.style.width = W + 'px'; node.style.height = H + 'px';
+  }
+  function layout() {
+    if (mode === 'play') {
+      var s = Math.min(window.innerWidth / W, window.innerHeight / H);
+      deck.style.transform = 'scale(' + s + ')';
+      deck.style.left = Math.round((window.innerWidth - W * s) / 2) + 'px';
+      deck.style.top = Math.round((window.innerHeight - H * s) / 2) + 'px';
+    } else if (mode === 'presenter') {
+      layoutPresenter();
+    }
+  }
+
+  // ---- fullscreen / black / help -------------------------------------------
+  function toggleFullscreen() {
+    var d = document.documentElement;
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (d.requestFullscreen) d.requestFullscreen(); else if (d.webkitRequestFullscreen) d.webkitRequestFullscreen();
+    } else {
+      if (document.exitFullscreen) document.exitFullscreen(); else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    }
+  }
+  function toggleBlack() {
+    if (!blackEl) { blackEl = el('div'); blackEl.id = 'kh-black'; document.body.appendChild(blackEl); }
+    blackEl.classList.toggle('kh-on');
+  }
+  function toggleHelp() {
+    if (!helpEl) {
+      helpEl = el('div', '', '<h3>keyhtml — keyboard</h3>' +
+        '<div><kbd>→</kbd><kbd>space</kbd> next build / slide &nbsp; <kbd>←</kbd> previous</div>' +
+        '<div><kbd>Home</kbd><kbd>End</kbd> first / last slide &nbsp; <kbd>1</kbd>…<kbd>⏎</kbd> go to slide</div>' +
+        '<div><kbd>f</kbd> fullscreen &nbsp; <kbd>o</kbd> or <kbd>esc</kbd> slide overview</div>' +
+        '<div><kbd>b</kbd> black screen &nbsp; <kbd>p</kbd> presenter window with notes</div>' +
+        '<div><kbd>?</kbd> this help &nbsp; · &nbsp; add <code>?print</code> to the URL to print / save as PDF</div>');
+      helpEl.id = 'kh-help'; document.body.appendChild(helpEl);
+    }
+    helpEl.classList.toggle('kh-on');
+  }
+
+  // ---- overview -------------------------------------------------------------
+  function slideClone(i, hideBuildsAbove) {
+    var d = el('div', 'kh-deck kh-ov-deck');
+    d.setAttribute('style', deck.getAttribute('style') || '');
+    d.style.width = W + 'px'; d.style.height = H + 'px';
+    var c = slides[i].cloneNode(true);
+    c.classList.add('kh-current'); c.classList.remove('kh-leaving', 'kh-enter');
+    Array.prototype.forEach.call(c.querySelectorAll('video,audio'), function (v) { v.removeAttribute('autoplay'); v.muted = true; v.removeAttribute('data-autoplay'); });
+    Array.prototype.forEach.call(c.querySelectorAll('[id]'), function (x) { x.removeAttribute('id'); });
+    Array.prototype.forEach.call(c.querySelectorAll('[data-kh-wrap]'), function (w) { w.classList.add('on'); w.classList.add('active'); });
+    if (hideBuildsAbove != null) {
+      buildEls(c).forEach(function (e) { e.classList.toggle('kh-hidden', (parseInt(e.getAttribute('data-build'), 10) || 0) > hideBuildsAbove); });
+    } else {
+      Array.prototype.forEach.call(c.querySelectorAll('.kh-hidden'), function (e) { e.classList.remove('kh-hidden'); });
+    }
+    d.appendChild(c);
+    return d;
+  }
+  function toggleOverview(force) {
+    var on = force != null ? force : !(overviewEl && overviewEl.classList.contains('kh-on'));
+    if (!on) { if (overviewEl) overviewEl.classList.remove('kh-on'); return; }
+    if (!overviewEl) { overviewEl = el('div'); overviewEl.id = 'kh-overview'; document.body.appendChild(overviewEl); }
+    overviewEl.innerHTML = '';
+    var grid = el('div', 'kh-ov-grid');
+    slides.forEach(function (s, i) {
+      var item = el('div', 'kh-ov-item' + (i === cur ? ' kh-ov-cur' : ''));
+      var frame = el('div', 'kh-ov-frame');
+      var d = slideClone(i, null);
+      frame.appendChild(d);
+      item.appendChild(frame);
+      item.appendChild(el('div', 'kh-ov-label', (i + 1) + (s.querySelector('.kh-text') ? ' · ' + (s.querySelector('.kh-text').textContent || '').trim().slice(0, 40) : '')));
+      item.addEventListener('click', function () { toggleOverview(false); show(i, 0, 0); });
+      grid.appendChild(item);
+    });
+    overviewEl.appendChild(grid);
+    overviewEl.classList.add('kh-on');
+    // scale clones once laid out
+    requestAnimationFrame(function () {
+      Array.prototype.forEach.call(overviewEl.querySelectorAll('.kh-ov-frame'), function (frame) {
+        var d = frame.firstChild; var s = frame.clientWidth / W;
+        d.style.transform = 'scale(' + s + ')';
+      });
+    });
+  }
+  function overviewOpen() { return overviewEl && overviewEl.classList.contains('kh-on'); }
+
+  // ---- presenter ------------------------------------------------------------
+  function openPresenter() {
+    var url = location.pathname + '?presenter' + '#' + (cur + 1);
+    var w = window.open(url, 'khpresenter', 'width=1280,height=800');
+    if (w) presenterWin = w;
+  }
+  function notifyPresenter() {
+    if (mode !== 'play' || !presenterWin) return;
+    try { presenterWin.postMessage({ kh: 'state', cur: cur, step: step }, '*'); } catch (e) { presenterWin = null; }
+  }
+  var pres = null;
+  function setupPresenter() {
+    document.body.classList.add('kh-presenter');
+    var root = el('div'); root.id = 'kh-pres';
+    root.innerHTML =
+      '<div class="kh-pres-top">' +
+        '<div class="kh-pres-cur"></div>' +
+        '<div class="kh-pres-side">' +
+          '<div><div class="kh-pres-label">Next</div><div class="kh-pres-nextwrap"></div></div>' +
+          '<div class="kh-pres-label">Notes</div><div class="kh-pres-notes"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="kh-pres-bar">' +
+        '<span class="kh-pres-time" data-role="elapsed">00:00</span>' +
+        '<button data-role="reset">reset timer</button>' +
+        '<span data-role="clock"></span>' +
+        '<span class="kh-pres-spacer"></span>' +
+        '<span data-role="counter"></span>' +
+        '<button data-role="prev">◀ prev</button><button data-role="next">next ▶</button>' +
+      '</div>';
+    document.body.appendChild(root);
+    var curBox = $('.kh-pres-cur', root);
+    deck.classList.add('kh-pres-deck');
+    curBox.appendChild(deck);
+    var nextDeck = el('div', 'kh-deck kh-pres-deck kh-ov-deck');
+    nextDeck.setAttribute('style', deck.getAttribute('style') || '');
+    $('.kh-pres-nextwrap', root).appendChild(nextDeck);
+    pres = { root: root, curBox: curBox, nextDeck: nextDeck, notes: $('.kh-pres-notes', root),
+             elapsed: $('[data-role=elapsed]', root), clock: $('[data-role=clock]', root), counter: $('[data-role=counter]', root),
+             t0: Date.now() };
+    $('[data-role=reset]', root).addEventListener('click', function () { pres.t0 = Date.now(); });
+    $('[data-role=prev]', root).addEventListener('click', function () { sendNav('prev'); });
+    $('[data-role=next]', root).addEventListener('click', function () { sendNav('next'); });
+    setInterval(function () {
+      var s = Math.floor((Date.now() - pres.t0) / 1000);
+      var mm = Math.floor(s / 60), ss = s % 60, hh = Math.floor(mm / 60); mm = mm % 60;
+      pres.elapsed.textContent = (hh ? hh + ':' : '') + (mm < 10 ? '0' : '') + mm + ':' + (ss < 10 ? '0' : '') + ss;
+      var d = new Date();
+      pres.clock.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }, 500);
+    if (window.opener) { try { window.opener.postMessage({ kh: 'hello' }, '*'); } catch (e) {} }
+  }
+  function layoutPresenter() {
+    if (!pres) return;
+    fitInto(pres.curBox, deck, 0);
+    var wrap = pres.nextDeck.parentNode;
+    pres.nextDeck.style.width = W + 'px'; pres.nextDeck.style.height = H + 'px';
+    pres.nextDeck.style.transform = 'scale(' + (wrap.clientWidth / W) + ')';
+    pres.nextDeck.style.left = '0'; pres.nextDeck.style.top = '0';
+  }
+  function updatePresenter() {
+    if (!pres) return;
+    pres.nextDeck.innerHTML = '';
+    var slide = slides[cur];
+    var ni, ns, label;
+    if (step < maxStep(slide)) { ni = cur; ns = step + 1; label = 'Next build'; }
+    else if (cur < slides.length - 1) { ni = cur + 1; ns = 0; label = 'Next slide'; }
+    else { ni = -1; }
+    if (ni >= 0) {
+      var c = slideClone(ni, ns).firstChild;
+      pres.nextDeck.appendChild(c);
+    } else {
+      pres.nextDeck.appendChild(el('div', 'kh-pres-end', ''));
+    }
+    pres.root.querySelector('.kh-pres-label').textContent = ni >= 0 ? label : 'End of presentation';
+    var notes = slide.querySelector('.kh-notes');
+    pres.notes.textContent = notes ? notes.textContent.trim() : '';
+    pres.counter.textContent = 'Slide ' + (cur + 1) + ' of ' + slides.length + (maxStep(slide) ? ' · build ' + step + '/' + maxStep(slide) : '');
+    layoutPresenter();
+  }
+  function sendNav(action, n) {
+    if (window.opener) { try { window.opener.postMessage({ kh: 'nav', action: action, n: n }, '*'); return; } catch (e) {} }
+    if (action === 'next') next(); else if (action === 'prev') prev(); else if (action === 'goto') show(n, 0, 0);
+  }
+  window.addEventListener('message', function (ev) {
+    var d = ev.data;
+    if (!d || !d.kh) return;
+    if (mode === 'play') {
+      if (d.kh === 'hello') { presenterWin = ev.source; notifyPresenter(); }
+      else if (d.kh === 'nav') {
+        if (d.action === 'next') next(); else if (d.action === 'prev') prev(); else if (d.action === 'goto') show(d.n, 0, 0);
+      }
+    } else if (mode === 'presenter' && d.kh === 'state') {
+      show(d.cur, d.step, 0, true);
+    }
+  });
+
+  // ---- input ----------------------------------------------------------------
+  function gotoTyped() {
+    if (digitBuffer) { var n = parseInt(digitBuffer, 10); digitBuffer = ''; if (n >= 1) { if (mode === 'presenter') sendNav('goto', n - 1); else show(n - 1, 0, 0); } }
+  }
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    var k = e.key;
+    if (overviewOpen()) {
+      if (k === 'Escape' || k === 'o' || k === 'O') { toggleOverview(false); e.preventDefault(); }
+      return;
+    }
+    if (helpEl && helpEl.classList.contains('kh-on') && k !== '?') { toggleHelp(); }
+    if (/^[0-9]$/.test(k)) { digitBuffer += k; clearTimeout(digitTimer); digitTimer = setTimeout(function () { digitBuffer = ''; }, 2500); return; }
+    var nav = mode === 'presenter' ? sendNav : function (a, n) { if (a === 'next') next(); else if (a === 'prev') prev(); else show(n, 0, 0); };
+    switch (k) {
+      case 'Enter': if (digitBuffer) { gotoTyped(); } else nav('next'); break;
+      case 'ArrowRight': case 'ArrowDown': case 'PageDown': nav('next'); break;
+      case ' ': if (e.shiftKey) nav('prev'); else nav('next'); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'Backspace': nav('prev'); break;
+      case 'Home': nav('goto', 0); break;
+      case 'End': if (mode === 'presenter') sendNav('goto', slides.length - 1); else show(slides.length - 1, maxStep(slides[slides.length - 1]), 1); break;
+      case 'f': case 'F': toggleFullscreen(); break;
+      case 'o': case 'O': toggleOverview(); break;
+      case 'Escape': if (!document.fullscreenElement && !document.webkitFullscreenElement) toggleOverview(); else return; break;
+      case 'b': case 'B': case '.': if (mode === 'play') toggleBlack(); break;
+      case 'p': case 'P': if (mode === 'play') openPresenter(); break;
+      case '?': case 'h': case 'H': toggleHelp(); break;
+      default: return;
+    }
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  });
+  if (mode === 'play') {
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('a,video,audio,button,input,select,textarea,#kh-overview,#kh-help,[contenteditable]')) return;
+      if (blackEl && blackEl.classList.contains('kh-on')) { toggleBlack(); return; }
+      next();
+    });
+    var tx = null, ty = null;
+    document.addEventListener('touchstart', function (e) { var t = e.changedTouches[0]; tx = t.clientX; ty = t.clientY; }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+      if (tx == null) return; var t = e.changedTouches[0]; var dx = t.clientX - tx, dy = t.clientY - ty; tx = null;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) { if (dx < 0) next(); else prev(); }
+    }, { passive: true });
+    document.addEventListener('mousemove', function () {
+      document.body.style.cursor = '';
+      clearTimeout(cursorTimer);
+      cursorTimer = setTimeout(function () { document.body.style.cursor = 'none'; }, 3000);
+    });
+  }
+  window.addEventListener('hashchange', function () { var n = slideFromHash(); if (n !== cur) show(n, 0, 0); });
+  window.addEventListener('resize', layout);
+
+  // ---- init -----------------------------------------------------------------
+  window.khPlayer = { next: next, prev: prev, show: show, slides: slides, overview: toggleOverview, presenter: openPresenter,
+                      current: function () { return { index: cur, step: step, slide: slides[cur] }; }, mode: mode };
+  function init() {
+    if (mode === 'print') {
+      document.body.classList.add('kh-print');
+      allSlides.forEach(function (s) { s.classList.add('kh-current'); applyBuilds(s, 9999, false); });
+      assertWraps();
+    } else {
+      if (mode === 'presenter') setupPresenter();
+      if (deck.getAttribute('data-slide-numbers') === '1' && mode === 'play') {
+        numEl = el('div'); numEl.id = 'kh-num'; deck.appendChild(numEl);
+      }
+      allSlides.forEach(function (s) { applyBuilds(s, 0, false); });
+      hook('kh:ready', { mode: mode, slides: slides });
+      show(slideFromHash(), 0, 0);
+      layout();
+      setTimeout(layout, 50);
+    }
+  }
+  // Deferred so that custom scripts placed after the player can register kh:* listeners first.
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else setTimeout(init, 0);
+})();
+</script>
+</body>
+</html>

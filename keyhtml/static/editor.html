@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>keyhtml</title>
+<base href="/files/">
+<link rel="stylesheet" href="/static/deck.css">
+<link rel="stylesheet" href="/static/editor.css">
+<script>
+window.MathJax = {
+  svg: { fontCache: 'none', mtextInheritFont: true },
+  startup: { typeset: false },
+  tex: { packages: { '[+]': ['ams', 'boldsymbol', 'color', 'physics', 'mhchem', 'cancel', 'bbox', 'braket', 'upgreek', 'unicode', 'newcommand', 'textmacros', 'html'] },
+         tags: 'none' },
+  options: { enableMenu: false }
+};
+</script>
+<script src="/static/vendor/mathjax/tex-svg-full.js" async></script>
+</head>
+<body>
+<div id="app">
+  <header id="toolbar">
+    <div class="tb-group tb-left">
+      <button class="tb-btn tb-menu" id="tb-file" title="File"><span class="tb-icon" data-icon="file"></span><span class="tb-label">File ▾</span></button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn" id="tb-undo" title="Undo (⌘Z)"><span class="tb-icon" data-icon="undo"></span><span class="tb-label">Undo</span></button>
+      <button class="tb-btn" id="tb-redo" title="Redo (⇧⌘Z)"><span class="tb-icon" data-icon="redo"></span><span class="tb-label">Redo</span></button>
+      <div class="tb-sep"></div>
+      <select id="tb-zoom" class="tb-select" title="Zoom">
+        <option value="fit">Fit</option><option value="0.25">25%</option><option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option><option value="1.5">150%</option><option value="2">200%</option>
+      </select>
+    </div>
+    <div class="tb-group tb-center">
+      <button class="tb-btn" id="tb-addslide" title="Add slide (⇧⌘N)"><span class="tb-icon" data-icon="addslide"></span><span class="tb-label">Add Slide ▾</span></button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn" id="tb-text" title="Text box (T)"><span class="tb-icon" data-icon="text"></span><span class="tb-label">Text</span></button>
+      <button class="tb-btn" id="tb-shape" title="Shape"><span class="tb-icon" data-icon="shape"></span><span class="tb-label">Shape ▾</span></button>
+      <button class="tb-btn" id="tb-media" title="Image, PDF, movie"><span class="tb-icon" data-icon="media"></span><span class="tb-label">Media ▾</span></button>
+      <button class="tb-btn" id="tb-math" title="LaTeX equation"><span class="tb-icon" data-icon="math"></span><span class="tb-label">Equation</span></button>
+      <button class="tb-btn" id="tb-table" title="Table"><span class="tb-icon" data-icon="table"></span><span class="tb-label">Table</span></button>
+      <button class="tb-btn" id="tb-html" title="Raw HTML block"><span class="tb-icon" data-icon="html"></span><span class="tb-label">HTML</span></button>
+      <div class="tb-sep"></div>
+      <button class="tb-btn" id="tb-play" title="Play from current slide (⌥⌘P)"><span class="tb-icon" data-icon="play"></span><span class="tb-label">Play</span></button>
+    </div>
+    <div class="tb-group tb-right">
+      <span id="tb-status" class="tb-status"></span>
+      <button class="tb-btn" id="tb-save" title="Save (⌘S)"><span class="tb-icon" data-icon="save"></span><span class="tb-label">Save</span></button>
+      <div class="tb-sep"></div>
+      <div class="tb-tabs">
+        <button class="tb-tab active" data-tab="format">Format</button>
+        <button class="tb-tab" data-tab="animate">Animate</button>
+        <button class="tb-tab" data-tab="document">Document</button>
+      </div>
+    </div>
+  </header>
+
+  <div id="main">
+    <aside id="navigator">
+      <div id="nav-list"></div>
+      <div id="nav-footer"><button id="nav-add" title="Add slide">+</button></div>
+    </aside>
+    <div id="stage">
+      <div id="canvas-wrap">
+        <div id="canvas-sizer">
+          <div id="canvas"></div>
+        </div>
+      </div>
+      <div id="notes-pane">
+        <div id="notes-grip" title="Drag to resize the notes (double-click to reset)"></div>
+        <div id="notes-head"><span>Presenter notes</span>
+          <span id="notes-fmt">
+            <button data-cmd="bold" title="Bold (⌘B)"><b>B</b></button><button data-cmd="italic" title="Italic (⌘I)"><i>I</i></button><button data-cmd="smaller" title="Smaller (⌘−)">A−</button><button data-cmd="bigger" title="Bigger (⌘=)">A+</button><button data-cmd="plain" title="Remove formatting from the selection">⌫</button>
+          </span>
+          <button id="notes-toggle" title="Show/hide notes">▾</button></div>
+        <div id="kh-notes-edit" contenteditable="true" spellcheck="true" data-placeholder="Notes for this slide (shown in the presenter window)"></div>
+      </div>
+    </div>
+    <aside id="inspector">
+      <div id="inspector-body"></div>
+    </aside>
+  </div>
+  <footer id="statusbar"><span id="sb-left"></span><span id="sb-right"></span></footer>
+</div>
+<div id="popover-layer"></div>
+<div id="modal-layer"></div>
+<div id="toast-layer"></div>
+<input type="file" id="file-input" multiple style="display:none">
+<script src="/static/js/util.js"></script>
+<script src="/static/js/icons.js"></script>
+<script src="/static/js/model.js"></script>
+<script src="/static/js/math.js"></script>
+<script src="/static/js/shapes.js"></script>
+<script src="/static/js/layouts.js"></script>
+<script src="/static/js/text.js"></script>
+<script src="/static/js/canvas.js"></script>
+<script src="/static/js/inspector.js"></script>
+<script src="/static/js/navigator.js"></script>
+<script src="/static/js/ui.js"></script>
+<script src="/static/js/toolbar.js"></script>
+<script src="/static/js/io.js"></script>
+<script src="/static/js/sync.js"></script>
+<script src="/static/js/main.js"></script>
+</body>
+</html>

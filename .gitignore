@@ -1,0 +1,8 @@
+# backups made before hand edits
+*.bak*
+# python build / cache
+__pycache__/
+*.egg-info/
+build/
+dist/
+.DS_Store

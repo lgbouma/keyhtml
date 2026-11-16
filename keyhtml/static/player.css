@@ -1,0 +1,83 @@
+/* keyhtml player — presentation-mode chrome. Embedded in every saved deck. */
+html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif}
+.kh-deck{position:absolute;left:0;top:0;transform-origin:0 0}
+.kh-slide{display:none}
+.kh-slide.kh-current,.kh-slide.kh-leaving{display:block}
+.kh-slide.kh-leaving{pointer-events:none;z-index:2}
+.kh-el.kh-hidden{visibility:hidden}
+.kh-el.kh-build-in{animation:kh-fadein .35s ease-out}
+.kh-el[data-build-effect="appear"].kh-build-in{animation:none}
+.kh-el[data-build-effect="rise"].kh-build-in{animation:kh-rise .45s cubic-bezier(.2,.7,.3,1)}
+.kh-el[data-build-effect="pop"].kh-build-in{animation:kh-pop .4s cubic-bezier(.2,.9,.3,1.3)}
+.kh-el[data-build-effect="slide-left"].kh-build-in{animation:kh-slideleft .45s cubic-bezier(.2,.7,.3,1)}
+/* per-bullet builds: items inside a box take the box's effect */
+.kh-el .kh-hidden{visibility:hidden}
+.kh-el .kh-build-in{animation:kh-fadein .35s ease-out}
+.kh-el[data-build-effect="appear"] .kh-build-in{animation:none}
+.kh-el[data-build-effect="rise"] .kh-build-in{animation:kh-rise .45s cubic-bezier(.2,.7,.3,1)}
+.kh-el[data-build-effect="pop"] .kh-build-in{animation:kh-pop .4s cubic-bezier(.2,.9,.3,1.3)}
+.kh-el[data-build-effect="slide-left"] .kh-build-in{animation:kh-slideleft .45s cubic-bezier(.2,.7,.3,1)}
+@keyframes kh-fadein{from{opacity:0}to{opacity:1}}
+@keyframes kh-fadeout{from{opacity:1}to{opacity:0}}
+@keyframes kh-rise{from{opacity:0;transform:translateY(40px)}to{opacity:1}}
+@keyframes kh-pop{from{opacity:0;transform:scale(.6)}to{opacity:1}}
+@keyframes kh-slideleft{from{opacity:0;transform:translateX(80px)}to{opacity:1}}
+/* rotation on built elements: keep the author's rotate() by animating a wrapper var is overkill; elements with rotation just fade */
+.kh-deck[data-kh-trans="fade"] .kh-slide.kh-enter{animation:kh-fadein .35s ease-out}
+.kh-deck[data-kh-trans="fade"] .kh-slide.kh-leaving{animation:kh-fadeout .35s ease-out forwards}
+.kh-deck[data-kh-trans="push"] .kh-slide.kh-enter{animation:kh-pushin .45s cubic-bezier(.4,0,.2,1)}
+.kh-deck[data-kh-trans="push"] .kh-slide.kh-leaving{animation:kh-pushout .45s cubic-bezier(.4,0,.2,1) forwards}
+.kh-deck[data-kh-trans="push"].kh-back .kh-slide.kh-enter{animation:kh-pushin-back .45s cubic-bezier(.4,0,.2,1)}
+.kh-deck[data-kh-trans="push"].kh-back .kh-slide.kh-leaving{animation:kh-pushout-back .45s cubic-bezier(.4,0,.2,1) forwards}
+.kh-deck[data-kh-trans="zoom"] .kh-slide.kh-enter{animation:kh-zoomin .4s cubic-bezier(.2,.7,.3,1)}
+.kh-deck[data-kh-trans="zoom"] .kh-slide.kh-leaving{animation:kh-fadeout .3s ease-out forwards}
+@keyframes kh-pushin{from{transform:translateX(100%)}to{transform:none}}
+@keyframes kh-pushout{from{transform:none}to{transform:translateX(-100%)}}
+@keyframes kh-pushin-back{from{transform:translateX(-100%)}to{transform:none}}
+@keyframes kh-pushout-back{from{transform:none}to{transform:translateX(100%)}}
+@keyframes kh-zoomin{from{opacity:0;transform:scale(1.08)}to{opacity:1}}
+#kh-num{position:absolute;right:34px;bottom:22px;font-size:22px;opacity:.55;font-family:var(--kh-font);color:var(--kh-color);z-index:3;pointer-events:none}
+#kh-black{position:fixed;inset:0;background:#000;display:none;z-index:50}
+#kh-black.kh-on{display:block}
+#kh-help{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(20,20,22,.96);color:#eee;padding:28px 36px;border-radius:14px;font-size:15px;line-height:1.7;display:none;z-index:60;box-shadow:0 20px 60px rgba(0,0,0,.6);min-width:360px}
+#kh-help.kh-on{display:block}
+#kh-help h3{margin:0 0 10px;font-weight:600;font-size:17px}
+#kh-help kbd{display:inline-block;min-width:1.6em;text-align:center;background:#333;border:1px solid #555;border-radius:5px;padding:0 6px;margin-right:8px;font-family:inherit;font-size:13px}
+#kh-overview{position:fixed;inset:0;background:#141416;overflow:auto;display:none;z-index:40;padding:36px;box-sizing:border-box}
+#kh-overview.kh-on{display:block}
+#kh-overview .kh-ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:26px}
+#kh-overview .kh-ov-item{cursor:pointer;color:#bbb;font-size:13px}
+#kh-overview .kh-ov-frame{width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:6px;background:#000;border:3px solid transparent;box-shadow:0 4px 16px rgba(0,0,0,.5);position:relative}
+#kh-overview .kh-ov-item.kh-ov-cur .kh-ov-frame{border-color:#0a84ff}
+#kh-overview .kh-ov-item:hover .kh-ov-frame{border-color:#5ac8fa}
+#kh-overview .kh-ov-label{margin-top:6px}
+.kh-ov-deck{position:absolute;left:0;top:0;transform-origin:0 0}
+.kh-ov-deck .kh-slide{display:block}
+.kh-ov-deck .kh-el.kh-hidden,.kh-ov-deck .kh-el .kh-hidden{visibility:visible}
+/* presenter view */
+body.kh-presenter{overflow:hidden;background:#161618;color:#e8e8ea}
+#kh-pres{position:fixed;inset:0;display:flex;flex-direction:column}
+#kh-pres .kh-pres-top{flex:1;display:flex;flex-direction:column;min-height:0;padding:18px;gap:18px;box-sizing:border-box}
+#kh-pres .kh-pres-row{flex:none;display:flex;gap:18px}
+#kh-pres .kh-pres-panel{flex:1;min-width:0;display:flex;flex-direction:column}
+/* slide boxes are 16:9 at half the width, but never taller than half the window, so the notes keep room */
+#kh-pres .kh-pres-cur,#kh-pres .kh-pres-nextwrap{position:relative;width:100%;height:min(calc((100vw - 54px) / 2 * 9 / 16), 46vh);background:#000;border-radius:6px;overflow:hidden}
+#kh-pres .kh-pres-label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#8a8a8e;margin-bottom:6px}
+#kh-pres .kh-pres-notes{flex:1;overflow:auto;background:#222225;border-radius:6px;padding:16px 20px;font-size:22px;line-height:1.5;white-space:pre-wrap;min-height:0}
+#kh-pres .kh-pres-bar{flex:none;display:flex;align-items:center;gap:26px;padding:12px 24px;background:#0f0f10;font-size:18px;font-variant-numeric:tabular-nums}
+#kh-pres .kh-pres-bar .kh-pres-time{font-size:30px;font-weight:600}
+#kh-pres .kh-pres-bar button{background:#2c2c30;color:#eee;border:0;border-radius:6px;padding:6px 14px;font-size:14px;cursor:pointer}
+#kh-pres .kh-pres-bar button:hover{background:#3a3a40}
+#kh-pres .kh-pres-bar .kh-pres-spacer{flex:1}
+#kh-pres .kh-pres-end{color:#8a8a8e}
+.kh-pres-deck{position:absolute;left:0;top:0;transform-origin:0 0}
+/* print / PDF export: one slide per page, all builds shown */
+body.kh-print{overflow:visible;background:#fff}
+body.kh-print .kh-deck{position:static;transform:none!important;width:1920px;height:auto}
+body.kh-print .kh-slide{display:block;position:relative;width:1920px;height:1080px;break-after:page;page-break-after:always}
+body.kh-print .kh-slide:last-of-type{break-after:auto;page-break-after:auto}
+body.kh-print .kh-el.kh-hidden,body.kh-print .kh-el .kh-hidden{visibility:visible}
+body.kh-print #kh-num{display:none}
+@page{size:1920px 1080px;margin:0}
+@media print{html,body{background:#fff}}

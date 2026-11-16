@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "keyhtml"
+version = "0.1.0"
+description = "A Keynote-style slide editor that reads and writes self-contained HTML presentations (vector PDF figures, LaTeX, movies)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = []
+
+[project.optional-dependencies]
+pdf = ["pymupdf>=1.23"]
+
+[project.scripts]
+keyhtml = "keyhtml.__main__:main"
+
+[tool.setuptools]
+packages = ["keyhtml"]
+
+[tool.setuptools.package-data]
+keyhtml = ["static/**/*"]
