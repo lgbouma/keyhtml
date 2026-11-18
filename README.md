@@ -9,6 +9,8 @@ A Keynote-style slide editor whose documents are plain, self-contained `.html` f
 * **LaTeX** — type `$E = mc^2$` inside any text box, `$$…$$` for display math, or insert a standalone
   equation. Rendered with MathJax at edit time into inline SVG, so the saved deck needs no JavaScript
   libraries and no network.
+* **Code** — code blocks with syntax highlighting (highlight.js, dark or light). Highlighted at edit time
+  into plain colored text, so again the saved deck needs no library.
 * **Movies** — drop an `.mp4`/`.webm`/`.mov`; set autoplay / loop / muted / controls; start offset.
 * **Present from the file itself** — open the `.html` in any browser. Arrow keys, builds (appear on click),
   transitions, overview grid, black screen, a presenter window with notes + timer, print-to-PDF.
@@ -52,9 +54,11 @@ carrying a single file to another machine.
 | **Shape ▾** | rectangles, ellipses, polygons, arrows, lines; shapes can hold text |
 | **Media ▾** | image / PDF / movie from a file picker or a path. Or **drag files onto the slide**, or **paste** a screenshot |
 | **Equation** | LaTeX equation block (MathJax, display mode) |
+| **Code** | code block with syntax highlighting: paste the code, pick the language (or auto-detect) and a dark or light theme. Double-click to edit; drag a corner to scale |
 | **Table** | 3×3 table inside a text box (+/- rows and columns in the inspector) |
 | **HTML** | an arbitrary HTML block (iframes, custom markup) |
 | **Play** | saves and opens the deck in a new tab at the current slide |
+| **Rehearse** | saves and opens the slides and the presenter view in two separate windows (see Presenting) |
 
 The inspector (right) has three tabs: **Format** (properties of the selection, or the slide background
 when nothing is selected), **Animate** (build order and effect; slide transitions) and **Document**
@@ -63,7 +67,11 @@ when nothing is selected), **Animate** (build order and effect; slide transition
 Shortcuts (also under `File ▸ Keyboard Shortcuts`, `⌘/`): `⌘S` save · `⌘Z/⇧⌘Z` undo/redo · `⌘D` duplicate
 · `⌘C ⌘X ⌘V` · `⌫` delete · arrows nudge (`⇧` ×10) · `⌘] ⌘[` reorder · `⌘L` lock · `⌘G/⇧⌘G` group/ungroup ·
 `⌘K` crop image · `⇧⌘N` new slide · `⌘= ⌘- ⌘0` zoom · `⌥-drag` duplicate · `⇧-drag` constrain ·
-`Esc` stop editing / step out of a group · `⌘⏎` finish editing.
+`Esc` stop editing / step out of a group · `⌘⏎` finish editing. After a click in the slide navigator,
+`⌘C ⌘X ⌘V` copy, cut and paste whole slides (pasted after the selected slide; also between decks).
+
+With three or more objects selected, right-click ▸ Distribute Horizontally / Vertically (also in the
+inspector's Arrange section) spaces them evenly between the outermost two, allowing for their sizes.
 
 ### Groups
 
@@ -84,7 +92,11 @@ scales the crop with it. Works for PDF-derived figures too.
 ### Text and LaTeX
 
 While editing text, formatting in the inspector applies to the selection (bold, italic, size, color,
-lists, super/subscript, alignment). With the box selected (not editing), it applies to the whole box.
+lists, super/subscript, alignment, links). With the box selected (not editing), it applies to the whole box.
+`Link` (⌘K) hyperlinks the selected text; `#3` jumps to slide 3, anything else opens in a new tab when played.
+Color swatches open a grid of 20 presets (the dark-deck palette first: white, greys, cyan, orange,
+magenta); `Custom…` opens the system color picker, whose picks land on the text that was selected when
+it opened, even after you click elsewhere.
 Inline math: `$\sigma_A = 1/\sqrt{s^T C^{-1} s}$` renders when you leave the box; double-click to see
 the source again. `$$ … $$` makes a centered display equation inside the text flow. The **Equation**
 button makes a resizable standalone equation. Macros for the whole deck go in `Document ▸ LaTeX`.
@@ -98,7 +110,7 @@ SVG is self-contained. Raster images embedded in the PDF stay raster.
 ### Builds, transitions, notes
 
 Select objects, open **Animate**, set an order (1, 2, 3…) — the object appears on the n-th click. Effects:
-fade, appear, rise, pop, slide. Transitions (fade, push, zoom) per deck or per slide. Presenter notes
+appear (the default), fade, rise, pop, slide. Transitions (fade, push, zoom) per deck or per slide. Presenter notes
 are typed in the pane under the canvas and shown in the presenter window (`n` while presenting).
 
 ## Presenting
@@ -107,6 +119,15 @@ Open the `.html`. Keys: `→ ↓ space PgDn` next · `← ↑ PgUp` previous · 
 `f` fullscreen · `o`/`Esc` overview · `b` black · `n` presenter window (current, next, notes, timer) ·
 `?` help. `talk.html#7` opens slide 7. `talk.html?print` lays out one slide per page for the browser's
 Print → Save as PDF. Movies with *Autoplay* start when their slide (or build step) appears.
+
+**Rehearse** (toolbar, or `File ▸ Rehearse from Start`) shows the slides and the presenter view (notes,
+next slide, timer) in two ordinary windows instead of going fullscreen, for example to share only the
+slides window in a video call while reading the notes in the other. Keys work in either window, the
+editor stays usable, and pressing Rehearse again reloads both windows with the saved deck at the current
+slide. Closing the slides window closes the presenter window. The browser counts the second window as a
+pop-up: until pop-ups are allowed for the editor's address (the icon in the address bar of the slides
+window), it opens on the first key or click in the slides window. Without the editor,
+`talk.html?rehearse` does the same.
 
 ## Importing existing HTML decks
 
@@ -117,7 +138,15 @@ Open any `.html` file with `keyhtml file.html`. If it is not a keyhtml deck, eve
 and `<script src>` tags are kept as external scripts. Double-click a block to edit its text in place, or
 add keyhtml objects on top. Save under a new name to keep the original.
 
-Custom JS runs only when presenting. The player exposes hooks so interactive demos keep working:
+Custom JS runs only when presenting, so a block whose figures are drawn by script (a `<canvas>` demo, a
+`data-demo` section) would be blank in the editor. Instead, the editor shows a **live preview** of such
+blocks: the deck is rendered by the real player, scripts included, in an isolated frame laid over the
+block, so you see what Play will show. The block is marked with a dashed outline and a *Live preview ·
+scripted HTML block* badge: the picture is not editable, edit the HTML source or the custom JS instead.
+Double-clicking still edits the block's text in place (the preview pauses while you type). Auto-detection
+picks blocks containing a canvas, a `data-demo` attribute or a script when the deck has custom JS; the
+block's inspector (`Preview: Auto / Always / Never`) overrides it, and Document ▸ Advanced turns the
+feature off altogether. The player exposes hooks so interactive demos keep working:
 
 ```js
 document.addEventListener('kh:ready', e => { /* e.detail.slides */ });
@@ -154,7 +183,8 @@ Element types: `kh-text`, `kh-image`, `kh-video`, `kh-shape` (+ `kh-shape-rect|e
 `kh-math`, `kh-html`, `kh-group` (children are `kh-el`s with geometry relative to the group box; nestable).
 Geometry is inline CSS in slide pixels; rotation is `transform: rotate(…)`. A cropped image has class
 `kh-cropped` and its `<img>` positioned in percent of the box, so the crop survives resizing.
-Per-element attributes: `data-build`, `data-build-effect`, `data-locked`, `data-lock-aspect`.
+Per-element attributes: `data-build`, `data-build-effect`, `data-locked`, `data-lock-aspect`; on `kh-html`
+blocks, `data-live="1|0"` forces the editor's live preview on or off.
 Per-slide: `data-transition`, `data-skip`. The `<head>` carries the deck CSS, the player CSS/JS, your
 custom CSS (`#kh-custom-css`), LaTeX macros (`#kh-macros`) and custom JS (`#kh-custom-js`), all of
 which keyhtml rewrites on save.
@@ -165,8 +195,10 @@ which keyhtml rewrites on save.
 keyhtml/__main__.py     CLI
 keyhtml/server.py       local HTTP server + file/asset API
 keyhtml/pdfconvert.py   PDF → SVG backends
-keyhtml/static/         editor (editor.html, editor.css, js/*) and the runtime embedded in decks
-                        (deck.css, player.css, player.js); vendor/mathjax
+keyhtml/static/         editor (editor.html, editor.css, js/*; js/preview.js is the live preview of
+                        scripted HTML blocks) and the runtime embedded in decks
+                        (deck.css, player.css, player.js); vendor/mathjax and
+                        vendor/highlight (highlight.js 11.11.1, BSD-3-Clause; editor only)
 examples/               a sample deck and the legacy-navigation shim
 tests/                  python unit tests for the server (python -m unittest discover tests)
 ```

@@ -36,6 +36,39 @@
 .kh-video video{background:#000}
 .kh-math{display:block}
 .kh-math svg{width:100%;height:100%;display:block;overflow:visible}
+/* code blocks: highlighted in the editor (highlight.js), saved as plain spans, colored here (GitHub palettes) */
+.kh-code{display:block;font-size:28px;line-height:1.45;text-align:left;font-weight:400;font-style:normal}
+.kh-code pre{margin:0;width:max-content;box-sizing:border-box;padding:.75em 1.1em;border-radius:.5em;white-space:pre;tab-size:4;
+  font-family:Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;font-size:1em;font-variant-ligatures:none;
+  background:#0d1117;color:#e6edf3;box-shadow:0 .2em .9em rgba(0,0,0,.2)}
+.kh-code code{font:inherit;background:none;padding:0}
+.kh-code .hljs-doctag,.kh-code .hljs-keyword,.kh-code .hljs-meta .hljs-keyword,.kh-code .hljs-template-tag,.kh-code .hljs-template-variable,.kh-code .hljs-type,.kh-code .hljs-variable.language_{color:#ff7b72}
+.kh-code .hljs-title,.kh-code .hljs-title.class_,.kh-code .hljs-title.class_.inherited__,.kh-code .hljs-title.function_{color:#d2a8ff}
+.kh-code .hljs-attr,.kh-code .hljs-attribute,.kh-code .hljs-literal,.kh-code .hljs-meta,.kh-code .hljs-number,.kh-code .hljs-operator,.kh-code .hljs-variable,.kh-code .hljs-selector-attr,.kh-code .hljs-selector-class,.kh-code .hljs-selector-id{color:#79c0ff}
+.kh-code .hljs-regexp,.kh-code .hljs-string,.kh-code .hljs-meta .hljs-string{color:#a5d6ff}
+.kh-code .hljs-built_in,.kh-code .hljs-symbol{color:#ffa657}
+.kh-code .hljs-comment,.kh-code .hljs-code,.kh-code .hljs-formula{color:#8b949e;font-style:italic}
+.kh-code .hljs-name,.kh-code .hljs-quote,.kh-code .hljs-selector-tag,.kh-code .hljs-selector-pseudo{color:#7ee787}
+.kh-code .hljs-subst{color:#e6edf3}
+.kh-code .hljs-section{color:#58a6ff;font-weight:700}
+.kh-code .hljs-bullet{color:#f2cc60}
+.kh-code .hljs-emphasis{font-style:italic}
+.kh-code .hljs-strong{font-weight:700}
+.kh-code .hljs-addition{color:#aff5b4;background:#033a16}
+.kh-code .hljs-deletion{color:#ffdcd7;background:#67060c}
+.kh-code-light pre{background:#f6f8fa;color:#1f2328;box-shadow:inset 0 0 0 1px #d0d7de}
+.kh-code-light .hljs-doctag,.kh-code-light .hljs-keyword,.kh-code-light .hljs-meta .hljs-keyword,.kh-code-light .hljs-template-tag,.kh-code-light .hljs-template-variable,.kh-code-light .hljs-type,.kh-code-light .hljs-variable.language_{color:#cf222e}
+.kh-code-light .hljs-title,.kh-code-light .hljs-title.class_,.kh-code-light .hljs-title.class_.inherited__,.kh-code-light .hljs-title.function_{color:#8250df}
+.kh-code-light .hljs-attr,.kh-code-light .hljs-attribute,.kh-code-light .hljs-literal,.kh-code-light .hljs-meta,.kh-code-light .hljs-number,.kh-code-light .hljs-operator,.kh-code-light .hljs-variable,.kh-code-light .hljs-selector-attr,.kh-code-light .hljs-selector-class,.kh-code-light .hljs-selector-id{color:#0550ae}
+.kh-code-light .hljs-regexp,.kh-code-light .hljs-string,.kh-code-light .hljs-meta .hljs-string{color:#0a3069}
+.kh-code-light .hljs-built_in,.kh-code-light .hljs-symbol{color:#953800}
+.kh-code-light .hljs-comment,.kh-code-light .hljs-code,.kh-code-light .hljs-formula{color:#6e7781}
+.kh-code-light .hljs-name,.kh-code-light .hljs-quote,.kh-code-light .hljs-selector-tag,.kh-code-light .hljs-selector-pseudo{color:#116329}
+.kh-code-light .hljs-subst{color:#1f2328}
+.kh-code-light .hljs-section{color:#0550ae}
+.kh-code-light .hljs-bullet{color:#953800}
+.kh-code-light .hljs-addition{color:#116329;background:#dafbe1}
+.kh-code-light .hljs-deletion{color:#82071e;background:#ffebe9}
 .kh-shape{display:flex;flex-direction:column;justify-content:center;}
 .kh-shape-ellipse{border-radius:50%}
 .kh-shape-triangle{clip-path:polygon(50% 0,100% 100%,0 100%)}

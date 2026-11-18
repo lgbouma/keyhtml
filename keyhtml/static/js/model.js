@@ -67,13 +67,14 @@ KH.model = (function () {
     if (c.contains('kh-shape-line')) return 'line';
     if (c.contains('kh-shape')) return 'shape';
     if (c.contains('kh-math')) return 'math';
+    if (c.contains('kh-code')) return 'code';
     if (c.contains('kh-html')) return 'html';
     return 'other';
   };
   M.isAspectLocked = function (el) {
     var t = M.type(el);
     if (el.dataset.lockAspect === '0') return false;
-    return t === 'image' || t === 'video' || t === 'math' || t === 'group' || el.dataset.lockAspect === '1';
+    return t === 'image' || t === 'video' || t === 'math' || t === 'code' || t === 'group' || el.dataset.lockAspect === '1';
   };
   M.isLocked = function (el) { return el.hasAttribute('data-locked'); };
   M.geom = function (el) {
@@ -201,6 +202,7 @@ KH.model = (function () {
       }
       if (k.type === 'line') KH.shapes.renderLine(k.el);
       else if (k.type === 'math') KH.math.syncSizeFromBox(k.el);
+      else if (k.type === 'code') KH.code.syncSizeFromBox(k.el);
       else if (k.type === 'group') M.scaleGroupTo(k.el, k.snap, g.w, g.h);
     });
   };
@@ -317,6 +319,14 @@ KH.model = (function () {
       KH.math.renderElement(el);
       return el;
     },
+    code: function (o) {
+      o = o || {};
+      var el = baseEl('kh-code' + (o.theme === 'light' ? ' kh-code-light' : ''), { x: o.x != null ? o.x : 460, y: o.y != null ? o.y : 340, w: 100, h: 100 });
+      el.setAttribute('data-lang', o.lang || 'auto');
+      el.style.fontSize = (o.fs || KH.code.DEFAULT_FS) + 'px';
+      KH.code.render(el, o.code || '');
+      return el;
+    },
     html: function (o) {
       var el = baseEl('kh-html', { x: o.x != null ? o.x : 460, y: o.y != null ? o.y : 240, w: o.w || 1000, h: o.h || 600 });
       el.innerHTML = o.html || '';
@@ -395,14 +405,18 @@ KH.model = (function () {
       list.forEach(function (el) { var g = M.geom(el); M.setGeom(el, axis === 'h' ? { x: g.x + dx } : { y: g.y + dy }); });
     });
   };
+  /* Space three or more elements evenly along one axis, as Keynote's Distribute Horizontally /
+     Vertically: the selection's outer edges stay where they are and the gaps between neighbours
+     (in order of their centers) are made equal, accounting for each element's size. */
   M.distribute = function (els, axis) {
     if (els.length < 3) return;
     var key = axis === 'h' ? 'x' : 'y', size = axis === 'h' ? 'w' : 'h';
-    var items = els.map(function (el) { return { el: el, g: M.geom(el) }; }).sort(function (a, b) { return a.g[key] - b.g[key]; });
-    var first = items[0].g, last = items[items.length - 1].g;
+    var items = els.map(function (el) { return { el: el, g: M.geom(el) }; })
+      .sort(function (a, b) { return (a.g[key] + a.g[size] / 2) - (b.g[key] + b.g[size] / 2); });
+    var box = M.bbox(els);
     var total = items.reduce(function (s, it) { return s + it.g[size]; }, 0);
-    var gap = ((last[key] + last[size]) - first[key] - total) / (items.length - 1);
-    var pos = first[key];
+    var gap = (box[size] - total) / (items.length - 1);
+    var pos = box[key];
     items.forEach(function (it) { var g = {}; g[key] = pos; M.setGeom(it.el, g); pos += it.g[size] + gap; });
   };
 

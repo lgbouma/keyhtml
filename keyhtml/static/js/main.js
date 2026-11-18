@@ -118,9 +118,51 @@
       if (KH.canvas.fitMode) setTimeout(KH.canvas.fit, 0);
     });
   }
+  /* Drag the border of the slide list (left) or the inspector (right) to change its width; the widths are
+     remembered. The slide in the middle keeps at least MIN_STAGE pixels. */
+  function initColumns() {
+    var MIN_STAGE = 320;
+    var cols = [
+      { el: KH.$('#navigator'), grip: KH.$('#nav-grip'), key: 'keyhtml.navWidth', def: 210, min: 120, max: 520, dir: 1 },
+      { el: KH.$('#inspector'), grip: KH.$('#insp-grip'), key: 'keyhtml.inspWidth', def: 270, min: 250, max: 640, dir: -1 },
+    ];
+    var relayout = function () { KH.nav.scaleThumbs(); if (KH.canvas.fitMode) KH.canvas.fit(); };
+    var limit = function (c) { // the widest this column may be right now
+      var other = cols[0] === c ? cols[1] : cols[0];
+      return Math.max(c.min, Math.min(c.max, KH.$('#main').clientWidth - other.el.offsetWidth - MIN_STAGE));
+    };
+    var set = function (c, px) { c.el.style.width = Math.round(Math.min(limit(c), Math.max(c.min, px))) + 'px'; };
+    var store = function (c) { try { localStorage.setItem(c.key, String(c.el.offsetWidth)); } catch (e) {} };
+    cols.forEach(function (c) {
+      try { var w = parseFloat(localStorage.getItem(c.key)); if (w > 0) set(c, w); } catch (e) {}
+      c.grip.addEventListener('pointerdown', function (e) {
+        if (e.button !== 0) return;
+        e.preventDefault();
+        var x0 = e.clientX, w0 = c.el.offsetWidth;
+        c.grip.setPointerCapture(e.pointerId);
+        c.grip.classList.add('dragging'); document.body.classList.add('cols-resizing');
+        var move = function (ev) { set(c, w0 + c.dir * (ev.clientX - x0)); relayout(); };
+        var up = function () {
+          c.grip.removeEventListener('pointermove', move); c.grip.removeEventListener('pointerup', up); c.grip.removeEventListener('pointercancel', up);
+          c.grip.classList.remove('dragging'); document.body.classList.remove('cols-resizing');
+          store(c); relayout();
+        };
+        c.grip.addEventListener('pointermove', move); c.grip.addEventListener('pointerup', up); c.grip.addEventListener('pointercancel', up);
+      });
+      c.grip.addEventListener('dblclick', function () { set(c, c.def); store(c); relayout(); });
+    });
+    // a smaller window: give the slide its room back
+    window.addEventListener('resize', function () {
+      var changed = false;
+      cols.forEach(function (c) { if (c.el.offsetWidth > limit(c)) { set(c, limit(c)); changed = true; } });
+      if (changed) relayout();
+    });
+    relayout();
+  }
   function boot() {
-    KH.ui.init(); KH.canvas.init(); KH.nav.init(); KH.inspector.init(); KH.toolbar.init(); KH.io.init(); KH.sync.init();
+    KH.ui.init(); KH.canvas.init(); KH.preview.init(); KH.nav.init(); KH.inspector.init(); KH.toolbar.init(); KH.io.init(); KH.sync.init();
     initNotes();
+    initColumns();
     KH.io.loadAssets().then(function () {
       return KH.io.api('/api/info');
     }).then(function (info) {

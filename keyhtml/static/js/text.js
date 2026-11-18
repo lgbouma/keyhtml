@@ -85,6 +85,7 @@ KH.text = (function () {
     KH.canvas.renderSelection();
     KH.emit('geom');
     KH.emit('textinput');
+    KH.emit('selectionchange'); // the inspector shows the format at the selection, which typing or formatting just changed
   };
 
   // ------------------------------------------------------------ formatting
@@ -185,6 +186,92 @@ KH.text = (function () {
     M.history.push();
   };
 
+  /* The link around the selection (or the caret) while editing, else null. */
+  T.linkAt = function () {
+    var el = T.editing; if (!el) return null;
+    var body = T.body(el), r = T.lastRange;
+    var s = window.getSelection();
+    if (s && s.rangeCount && body.contains(s.getRangeAt(0).commonAncestorContainer)) r = s.getRangeAt(0);
+    if (!r) return null;
+    var n = r.commonAncestorContainer;
+    if (n.nodeType === 3) n = n.parentNode;
+    var a = n.closest && n.closest('a');
+    return a && body.contains(a) && a !== body ? a : null;
+  };
+  /* Hyperlink the selected text: ask for a URL, wrap the selection in <a>, or edit / remove the link
+     the caret is in. With a box selected (not editing) the whole text of the box is linked. */
+  T.link = function () {
+    var el = T.editing;
+    if (!el) {
+      el = KH.canvas.single();
+      if (!el || !T.canEdit(el) || M.type(el) === 'html') return;
+      T.enter(el);
+      selectAllIn(T.body(el));
+      T.lastRange = window.getSelection().getRangeAt(0).cloneRange();
+    }
+    T.restoreRange();
+    var a = T.linkAt();
+    if (!a && selectionCollapsed()) { KH.toast('Select the text to link first', 'warn', 2000); return; }
+    var input = h('input', { type: 'text', value: a ? a.getAttribute('href') || '' : '', placeholder: 'https://…  or  #3 for slide 3', spellcheck: 'false' });
+    var body = h('div', {}, h('div', { class: 'hint', style: { marginBottom: '6px' } }, 'Links open in a new tab when the deck is played; a "#" link jumps to that slide.'), input);
+    var buttons = [{ label: 'Cancel' }];
+    if (a) buttons.push({ label: 'Remove link', action: function () { apply(''); } });
+    buttons.push({ label: a ? 'Update' : 'Add link', primary: true, action: function () { apply(input.value); } });
+    KH.ui.modal({ title: a ? 'Edit link' : 'Add link', body: body, selectAll: true, buttons: buttons });
+    function apply(url) {
+      url = (url || '').trim();
+      if (url && !/^(#|\/|\.|[a-z][a-z0-9+.-]*:)/i.test(url)) url = 'https://' + url; // "example.com" → https://example.com
+      T.restoreRange();
+      if (a && a.isConnected) {
+        if (!url) { while (a.firstChild) a.parentNode.insertBefore(a.firstChild, a); a.parentNode.removeChild(a); }
+        else setHref(a, url);
+      } else if (url) {
+        document.execCommand('styleWithCSS', false, false);
+        document.execCommand('createLink', false, url);
+        KH.$$('a', T.body(T.editing)).forEach(function (x) { if (x.getAttribute('href') === url) setHref(x, url); });
+      }
+      T.onInput();
+    }
+    function setHref(x, url) {
+      x.setAttribute('href', url);
+      if (url.charAt(0) === '#') { x.removeAttribute('target'); x.removeAttribute('rel'); }
+      else { x.setAttribute('target', '_blank'); x.setAttribute('rel', 'noopener'); }
+    }
+  };
+
+  /* Wrap the text a range covers in spans carrying one style, without touching focus or the
+     selection: the color picker paints its colors this way, so the native panel can stay open and
+     the result does not depend on whether the box is still being edited. Returns the spans, which a
+     later call can restyle in place. */
+  T.styleRange = function (range, prop, value) {
+    var ec = range.endContainer, sc = range.startContainer;
+    if (ec.nodeType === 3 && range.endOffset < ec.nodeValue.length) ec.splitText(range.endOffset);
+    if (sc.nodeType === 3 && range.startOffset > 0) sc.splitText(range.startOffset); // the range now ends at this node's end, the rest follows it
+    var root = range.commonAncestorContainer; if (root.nodeType === 3) root = root.parentNode;
+    var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+    for (var t = w.nextNode(); t; t = w.nextNode()) {
+      if (!t.nodeValue.length || !range.intersectsNode(t)) continue;
+      if (t === range.startContainer && range.startOffset >= t.nodeValue.length) continue;
+      if (t === range.endContainer && range.endOffset === 0) continue;
+      nodes.push(t);
+    }
+    return nodes.map(function (t) {
+      var p = t.parentNode, span;
+      if (p.tagName === 'SPAN' && p.childNodes.length === 1 && p.getAttribute('style') && !p.className) span = p;
+      else { span = h('span'); p.insertBefore(span, t); span.appendChild(t); }
+      span.style[prop] = value;
+      return span;
+    });
+  };
+  /* Remember a range as the editing selection (restored by the next formatting command) and show it
+     while focus is elsewhere, e.g. in the color picker. */
+  T.setRange = function (r) {
+    T.lastRange = r.cloneRange();
+    if (!T.editing) return;
+    if (document.activeElement !== T.body(T.editing)) showSaved();
+    else { var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+  };
+
   T.setFontSize = function (px) {
     px = Math.max(4, parseFloat(px) || 40);
     if (T.editing) T.restoreRange();
@@ -194,6 +281,8 @@ KH.text = (function () {
       document.execCommand('fontSize', false, '7');
       // Move (not copy) the children so the new spans can be reselected afterwards.
       var spans = KH.$$('font[size="7"]', body).map(function (f) {
+        // sizes set earlier on parts of this text would win over the new one
+        KH.$$('[style*="font-size"]', f).forEach(function (x) { x.style.fontSize = ''; if (!x.getAttribute('style')) x.removeAttribute('style'); });
         var span = h('span', { style: 'font-size:' + px + 'px' });
         while (f.firstChild) span.appendChild(f.firstChild);
         f.replaceWith(span);
@@ -212,15 +301,37 @@ KH.text = (function () {
     if (T.editing && M.type(T.editing) === 'html') return;
     KH.canvas.sel.forEach(function (el) {
       if (M.type(el) === 'math') { el.setAttribute('data-fs', String(px)); KH.math.renderElement(el); }
+      else if (M.type(el) === 'code') KH.code.setFontSize(el, px);
       else el.style.fontSize = px + 'px';
     });
     KH.canvas.renderSelection();
     M.history.push();
   };
 
+  /* The element around the first selected character (or the caret): its size and color are what the
+     inspector shows and steps from. The selection's own end points will not do: after a size change
+     they sit outside the new span, in the box, and the next step would start from the box's size. */
+  function selectionElement(body) {
+    var s = window.getSelection(); if (!body || !s || !s.rangeCount) return null;
+    var r = s.getRangeAt(0), root = r.commonAncestorContainer, n = null;
+    if (!body.contains(root)) return null;
+    if (root.nodeType === 3) n = root;
+    else if (!r.collapsed) {
+      var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (var t = w.nextNode(); t && !n; t = w.nextNode()) {
+        if (!t.nodeValue.length || !r.intersectsNode(t)) continue;
+        if (t === r.startContainer && r.startOffset >= t.nodeValue.length) continue; // selection starts after this text
+        if (t === r.endContainer && r.endOffset === 0) continue;                    // or ends before it
+        n = t;
+      }
+    }
+    n = n || r.startContainer;
+    return n.nodeType === 1 ? n : n.parentNode;
+  }
+
   /* Current formatting state for the inspector */
   T.state = function (el) {
-    var st = { bold: false, italic: false, underline: false, strike: false, align: 'left', fontSize: 40, fontFamily: '', color: '#000000', ul: false, ol: false, sup: false, sub: false };
+    var st = { bold: false, italic: false, underline: false, strike: false, align: 'left', fontSize: 40, fontFamily: '', color: '#000000', ul: false, ol: false, sup: false, sub: false, link: false };
     if (!el) return st;
     var cs = getComputedStyle(el);
     st.fontSize = Math.round(parseFloat(el.style.fontSize) || parseFloat(cs.fontSize));
@@ -234,9 +345,9 @@ KH.text = (function () {
         st.underline = document.queryCommandState('underline'); st.strike = document.queryCommandState('strikeThrough');
         st.ul = document.queryCommandState('insertUnorderedList'); st.ol = document.queryCommandState('insertOrderedList');
         st.sup = document.queryCommandState('superscript'); st.sub = document.queryCommandState('subscript');
-        var s = window.getSelection();
-        if (s && s.anchorNode) {
-          var n = s.anchorNode.nodeType === 1 ? s.anchorNode : s.anchorNode.parentNode;
+        st.link = !!T.linkAt();
+        var n = selectionElement(T.body(el));
+        if (n) {
           var ncs = getComputedStyle(n);
           st.fontSize = Math.round(parseFloat(ncs.fontSize));
           st.color = KH.toHex(ncs.color) || st.color;
@@ -309,11 +420,23 @@ KH.text = (function () {
   document.addEventListener('focusin', function (e) {
     if (T.editing && e.target === T.body(T.editing)) T.clearSaved();
   }, true);
-  document.addEventListener('selectionchange', function () {
-    if (!T.editing) return;
+  /* Only a selection that really moved inside the text is announced. The browser also fires
+     'selectionchange' (bubbling up from the field) whenever an <input> is given a value, so rebuilding
+     the inspector fired it a dozen times; announcing those made the inspector rebuild again, without
+     end, and a click on one of its buttons was lost whenever a rebuild fell between press and release. */
+  function sameRange(a, b) {
+    return !!a && !!b && a.startContainer === b.startContainer && a.startOffset === b.startOffset && a.endContainer === b.endContainer && a.endOffset === b.endOffset;
+  }
+  T.sameRange = sameRange;
+  document.addEventListener('selectionchange', function (e) {
+    if (!T.editing || (e.target && e.target !== document)) return;
     var s = window.getSelection();
-    if (s && s.rangeCount) { var r = s.getRangeAt(0); var body = T.body(T.editing); if (body && body.contains(r.commonAncestorContainer)) T.lastRange = r.cloneRange(); }
-    KH.emit('selectionchange');
+    if (!s || !s.rangeCount) return;
+    var r = s.getRangeAt(0), body = T.body(T.editing);
+    if (!body || !body.contains(r.commonAncestorContainer)) return;
+    var moved = !sameRange(r, T.lastRange);
+    T.lastRange = r.cloneRange();
+    if (moved) KH.emit('selectionchange');
   });
   return T;
 })();

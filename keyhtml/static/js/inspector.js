@@ -78,37 +78,97 @@ KH.inspector = (function () {
     plus.addEventListener('click', function () { var v = get() + step; if (o.max != null) v = Math.min(o.max, v); set(v); });
     return h('div', { class: 'stepper' }, minus, inp, plus);
   }
+  /* The swatch grid: the dark-deck palette first (white text on black, signal / highlight / threshold
+     accents and the greys used for secondary text, data points and axes), then general colors. */
+  var PALETTE = [
+    ['#ffffff', 'White'], ['#b0b0b0', 'Light grey · data points'], ['#8a8a8a', 'Mid grey · secondary text'], ['#666666', 'Grey · axes'], ['#333333', 'Dark grey · reference lines'],
+    ['#000000', 'Black'], ['#4cc9f0', 'Signal · cyan'], ['#ff9f1c', 'Highlight · orange'], ['#f72585', 'Threshold · magenta'], ['#ffd60a', 'Yellow'],
+    ['#06d6a0', 'Green'], ['#4361ee', 'Blue'], ['#7209b7', 'Violet'], ['#e63946', 'Red'], ['#80ffdb', 'Mint'],
+    ['#1a1a1a', 'Near black'], ['#e9ecef', 'Near white'], ['#3a86ff', 'Light blue'], ['#8ac926', 'Lime'], ['#d4a373', 'Tan'],
+  ];
   function colorCtl(get, set, o) {
     o = o || {};
     var cur = get();
     var none = KH.isTransparent(cur);
-    var inp = h('input', { type: 'color', value: KH.toHex(cur) || '#000000' });
-    var w = h('div', { class: 'color-ctl' + (none ? ' is-none' : '') }, inp);
-    // While text is being edited, live updates would refocus the text and close the native
-    // picker, so apply only when the picker closes ('change'); keep the panel from rebuilding meanwhile.
-    // Remember the text selection when the picker opens: clicking back into the text to close the
-    // picker moves the caret before 'change' fires, and the color would land on an empty caret.
-    var saved = null;
-    var open = function () {
-      I.pickerOpen = true;
-      if (T.editing && T.lastRange && !T.lastRange.collapsed) saved = { el: T.editing, range: T.lastRange.cloneRange() };
+    // The swatch opens a grid of preset colors; its "Custom…" cell opens the native picker, which is
+    // the (invisible) color input underneath and keeps all its event handling below.
+    var inp = h('input', { type: 'color', value: KH.toHex(cur) || '#000000', class: 'native', tabindex: '-1', title: 'Custom color' });
+    var sw = h('button', { class: 'swatch', title: 'Color' });
+    var showCur = function (v) { sw.style.background = v || ''; sw.classList.toggle('is-none', !v); };
+    showCur(none ? null : KH.toHex(cur) || cur);
+    var w = h('div', { class: 'color-ctl' + (none ? ' is-none' : '') }, sw, inp);
+    // Text color on a selection (o.text, while editing): the selected range is remembered when the
+    // picker opens and painted directly (T.styleRange) on every pick. That needs neither focus nor
+    // the selection, so the native panel stays open, the text shows the color live, and the color
+    // still lands on that text when the box is no longer being edited by the time the panel closes
+    // (a click on the slide dismisses it, and macOS keeps the panel bound to this control even after
+    // the inspector has been rebuilt). It never falls back to coloring the whole box.
+    // A collapsed caret gets the typing color when the picker closes, as before.
+    var saved = null, spans = null, dirty = false, pending = false;
+    var textSel = function () { return o.text && T.editing && T.lastRange && !T.lastRange.collapsed ? T.lastRange : null; };
+    var capture = function () {
+      var r = textSel(); if (!r) return;
+      if (saved && spans && T.sameRange(r, saved.range)) return; // still the text painted so far
+      saved = { el: T.editing, range: r.cloneRange() }; spans = null;
     };
+    var paint = function (v) {
+      if (!saved.el.isConnected || (!spans && !saved.range.startContainer.isConnected)) { saved = null; return; }
+      if (!spans) {
+        spans = T.styleRange(saved.range, 'color', v);
+        if (!spans.length) { saved = null; return; }
+        var r = document.createRange(); r.setStartBefore(spans[0]); r.setEndAfter(spans[spans.length - 1]);
+        saved.range = r; if (T.editing === saved.el) T.setRange(r);
+      } else spans.forEach(function (s) { s.style.color = v; });
+      dirty = true;
+      C.renderSelection(); KH.emit('geom');
+    };
+    var commit = function () {
+      if (saved) { if (dirty) { dirty = false; M.history.push(); } return; }
+      if (pending) { pending = false; if (T.editing) set(inp.value, false); return; }
+      set(inp.value, false);
+    };
+    var open = function () { I.pickerOpen = true; capture(); };
     var shut = function () { I.pickerOpen = false; };
-    var restore = function () {
-      if (!saved || T.editing !== saved.el || !saved.range.startContainer.isConnected) return;
-      var body = T.body(T.editing);
-      if (document.activeElement !== body) body.focus();
-      var s = window.getSelection(); s.removeAllRanges(); s.addRange(saved.range);
-      T.lastRange = saved.range.cloneRange();
-    };
-    // While editing, a picked color is applied on 'change' or, if focus leaves the picker first
-    // (e.g. a click back into the text, after which the panel may be rebuilt), on 'blur'.
-    var pending = false;
-    var commit = function () { pending = false; restore(); saved = null; set(inp.value, false); };
     inp.addEventListener('mousedown', open); inp.addEventListener('focus', open);
-    inp.addEventListener('blur', function () { shut(); if (pending) commit(); });
-    inp.addEventListener('input', function () { w.classList.remove('is-none'); if (T.editing) pending = true; else set(inp.value, true); });
-    inp.addEventListener('change', function () { shut(); w.classList.remove('is-none'); if (pending || !T.editing) commit(); });
+    inp.addEventListener('blur', function () { shut(); if (saved || pending) commit(); });
+    inp.addEventListener('input', function () {
+      w.classList.remove('is-none');
+      capture();
+      if (saved) paint(inp.value);
+      else if (T.editing) pending = true;
+      else set(inp.value, true);
+    });
+    inp.addEventListener('change', function () { shut(); w.classList.remove('is-none'); showCur(inp.value); if (saved || pending || !T.editing) commit(); });
+    inp.addEventListener('input', function () { showCur(inp.value); });
+    // A preset swatch applies at once: to the remembered text selection, the typing color, or the boxes.
+    var choose = function (hex) {
+      inp.value = hex; w.classList.remove('is-none'); showCur(hex);
+      capture();
+      if (saved) { paint(hex); commit(); }
+      else set(hex, false);
+    };
+    var pop = null;
+    sw.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    sw.addEventListener('click', function () {
+      if (pop && pop.isConnected) { KH.ui.closePopovers(); return; }
+      var grid = h('div', { class: 'swatch-grid' });
+      var curHex = KH.toHex(w.classList.contains('is-none') ? '' : inp.value) || '';
+      PALETTE.forEach(function (c) {
+        var b = h('button', { class: 'sw' + (c[0] === curHex ? ' active' : ''), title: c[1] + '  ' + c[0], style: { background: c[0] } });
+        b.addEventListener('mousedown', function (e) { e.preventDefault(); });
+        b.addEventListener('click', function () { KH.ui.closePopovers(); choose(c[0]); });
+        grid.appendChild(b);
+      });
+      var custom = h('button', { class: 'ibtn custom' }, 'Custom…');
+      custom.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      custom.addEventListener('click', function () {
+        KH.ui.closePopovers();
+        open();
+        try { inp.showPicker(); } catch (e) { inp.click(); }
+      });
+      pop = KH.ui.popover(sw, h('div', { class: 'swatch-pop' }, grid, custom), { onClose: function () { I.pickerOpen = false; pop = null; } });
+      I.pickerOpen = true;
+    });
     if (o.none) {
       var nb = h('button', { class: 'none', title: 'None / transparent' }, '∅');
       nb.addEventListener('click', function () { w.classList.add('is-none'); set(null, false); });
@@ -197,6 +257,7 @@ KH.inspector = (function () {
       else if (type === 'image') body.appendChild(imageSection(el));
       else if (type === 'video') body.appendChild(videoSection(el));
       else if (type === 'math') body.appendChild(mathSection(el));
+      else if (type === 'code') body.appendChild(codeSection(el));
       else if (type === 'html') {
         // While editing an HTML block in place, offer selection-level text formatting too.
         if (T.editing === el && els.length === 1) body.appendChild(textSection(el));
@@ -280,6 +341,7 @@ KH.inspector = (function () {
     var t = M.type(e);
     if (t === 'line') KH.shapes.renderLine(e);
     if (t === 'math') KH.math.syncSizeFromBox(e);
+    if (t === 'code') KH.code.syncSizeFromBox(e);
   }
 
   function matchFont(ff) {
@@ -296,13 +358,14 @@ KH.inspector = (function () {
     s.appendChild(row('Font', sel(fontOpts, function () { return el.style.fontFamily ? matchFont(el.style.fontFamily) : (T.editing ? matchFont(st.fontFamily) : ''); },
       function (v) { if (!v) applySel(function (e) { e.style.fontFamily = ''; }); else T.exec('fontName', v); })));
     s.appendChild(row('Size', stepper(function () { return st.fontSize; }, function (v) { T.setFontSize(v); }, { min: 4, max: 500, step: 2 }), 'px',
-      colorCtl(function () { return st.color; }, function (v, live) { T.exec('foreColor', v || '', live); }),
+      colorCtl(function () { return st.color; }, function (v, live) { T.exec('foreColor', v || '', live); }, { text: true }),
       (function () { var b = btn('Default', T.resetColor); b.title = 'Reset to the deck text color (⌥⌘0)'; return b; })()));
     s.appendChild(row('Style',
       seg([{ v: 'bold', icon: 'bold', title: 'Bold ⌘B' }, { v: 'italic', icon: 'italic', title: 'Italic ⌘I' }, { v: 'underline', icon: 'underline', title: 'Underline ⌘U' }, { v: 'strikeThrough', icon: 'strike', title: 'Strikethrough' }],
         function () { return [st.bold && 'bold', st.italic && 'italic', st.underline && 'underline', st.strike && 'strikeThrough']; }, function (v) { T.exec(v); }),
       seg([{ v: 'superscript', icon: 'sup', title: 'Superscript' }, { v: 'subscript', icon: 'sub', title: 'Subscript' }],
-        function () { return [st.sup && 'superscript', st.sub && 'subscript']; }, function (v) { if (T.editing) T.exec(v); })));
+        function () { return [st.sup && 'superscript', st.sub && 'subscript']; }, function (v) { if (T.editing) T.exec(v); }),
+      inHtml ? null : seg([{ v: 'link', icon: 'link', title: 'Link ⌘K' }], function () { return st.link && 'link'; }, function () { T.link(); })));
     s.appendChild(row('Align',
       seg([{ v: 'justifyLeft', icon: 'alignLeft', title: 'Left' }, { v: 'justifyCenter', icon: 'alignCenter', title: 'Center' }, { v: 'justifyRight', icon: 'alignRight', title: 'Right' }, { v: 'justifyFull', icon: 'alignJustify', title: 'Justify' }],
         function () { return 'justify' + st.align.charAt(0).toUpperCase() + st.align.slice(1).replace('justify', 'Full'); }, function (v) { T.exec(v); }),
@@ -402,12 +465,30 @@ KH.inspector = (function () {
     s.appendChild(row('', btn('Open equation editor…', function () { KH.ui.editEquation(el); })));
     return s;
   }
+  function codeSection(el) {
+    var K = KH.code, s = sec('Code');
+    s.appendChild(row('Language', sel(K.LANGS, function () { return K.lang(el); }, function (v) {
+      applySel(function (e) { if (M.type(e) === 'code') { e.setAttribute('data-lang', v); K.render(e); } });
+    })));
+    s.appendChild(row('Theme', seg([{ v: 'dark', label: 'Dark' }, { v: 'light', label: 'Light' }], function () { return K.theme(el); }, function (v) {
+      applySel(function (e) { if (M.type(e) === 'code') K.theme(e, v); });
+    })));
+    s.appendChild(row('Size', stepper(function () { return Math.round(K.fontSize(el)); }, function (v) { T.setFontSize(v); }, { min: 6, max: 200, step: 2 }), 'px'));
+    s.appendChild(row('', btn('Edit code…', function () { KH.ui.editCode(el); })));
+    s.appendChild(hint('The box is as large as the code: change the size here, or drag a corner to scale it. Double-click (or press ⏎) to edit the code.'));
+    return s;
+  }
   function htmlSection(el) {
     var s = sec('HTML block');
     s.appendChild(row('', btn('Edit HTML source…', function () { KH.ui.editHtml(el); }), btn('Edit in place', function () { T.enter(el); })));
     s.appendChild(row('Clip', check('Clip overflow', function () { return el.style.overflow !== 'visible'; }, function (v) { applySel(function (e) { e.style.overflow = v ? '' : 'visible'; }); })));
     s.appendChild(row('Fill', colorCtl(function () { return el.style.backgroundColor || el.style.background; }, function (v, live) { applySel(function (e) { e.style.background = v || ''; }, live); }, { none: true })));
-    s.appendChild(hint('Arbitrary HTML/CSS. Imported slides from hand-written decks live in blocks like this; double-click to edit the text directly.'));
+    var PV = KH.preview, state = PV.state(el), live = PV.isLive(el);
+    var status = !PV.enabled && PV.wants(el) ? 'off (Document ▸ Advanced)' : live ? 'on' : state === 'auto' ? (PV.hasScripts() ? 'off: no canvas, data-demo or script inside' : 'off: the deck has no custom JS') : 'off';
+    s.appendChild(row('Preview', sel([['auto', 'Auto'], ['on', 'Always'], ['off', 'Never']], function () { return state; }, function (v) { applySel(function (e) { PV.setState(e, v); }); }), status));
+    s.appendChild(hint(live
+      ? 'Live preview: the deck is rendered by the player, custom JS included, in an isolated frame over this block — what you see is what Play shows. The picture itself cannot be edited: change the HTML source, the deck\'s custom JS or CSS. Double-click still edits the block\'s text in place (the preview pauses).'
+      : 'Arbitrary HTML/CSS. Imported slides from hand-written decks live in blocks like this; double-click to edit the text directly. Blocks whose content is drawn by the deck\'s JavaScript can show a live preview.'));
     return s;
   }
 
@@ -431,6 +512,13 @@ KH.inspector = (function () {
     return l > b ? b + '–' + l : String(b);
   }
 
+  /* New builds default to Appear. A built object with no data-build-effect is a fade (older decks). */
+  function setBuild(e, n) {
+    if (!e.hasAttribute('data-build') && !e.hasAttribute('data-build-effect')) e.setAttribute('data-build-effect', 'appear');
+    e.setAttribute('data-build', String(n));
+  }
+  function clearBuild(e) { e.removeAttribute('data-build'); e.removeAttribute('data-build-effect'); }
+
   function renderAnimate() {
     var els = C.sel;
     var slide = M.slide();
@@ -438,10 +526,10 @@ KH.inspector = (function () {
       var el = els[0];
       var s = sec('Build In');
       s.appendChild(row('Order', stepper(function () { return parseInt(el.getAttribute('data-build'), 10) || 0; }, function (v) {
-        applySel(function (e) { if (v > 0) e.setAttribute('data-build', String(v)); else { e.removeAttribute('data-build'); e.removeAttribute('data-build-effect'); } });
+        applySel(function (e) { if (v > 0) setBuild(e, v); else clearBuild(e); });
       }, { min: 0, max: 99 }), '(0 = no build)'));
-      s.appendChild(row('Effect', sel([['fade', 'Fade in'], ['appear', 'Appear'], ['rise', 'Rise'], ['pop', 'Pop'], ['slide-left', 'Slide from right']],
-        function () { return el.getAttribute('data-build-effect') || 'fade'; }, function (v) { applySel(function (e) { if (v === 'fade') e.removeAttribute('data-build-effect'); else e.setAttribute('data-build-effect', v); }); })));
+      s.appendChild(row('Effect', sel([['appear', 'Appear'], ['fade', 'Fade in'], ['rise', 'Rise'], ['pop', 'Pop'], ['slide-left', 'Slide from right']],
+        function () { return el.getAttribute('data-build-effect') || (el.hasAttribute('data-build') ? 'fade' : 'appear'); }, function (v) { applySel(function (e) { e.setAttribute('data-build-effect', v); }); })));
       var nItems = els.length === 1 ? buildItemCount(el) : 0;
       if (nItems > 1) {
         s.appendChild(row('', check('Build by bullet (one per click)', function () { return el.getAttribute('data-build-items') === '1'; }, function (v) {
@@ -450,7 +538,7 @@ KH.inspector = (function () {
               e.setAttribute('data-build-items', '1');
               if (!(parseInt(e.getAttribute('data-build'), 10) > 0)) {
                 var n = 1; M.elements(slide).forEach(function (o) { if (o !== e) n = Math.max(n, lastStep(o) + 1); });
-                e.setAttribute('data-build', String(n));
+                setBuild(e, n);
               }
             } else { e.removeAttribute('data-build-items'); e.removeAttribute('data-build-from'); }
           });
@@ -462,18 +550,18 @@ KH.inspector = (function () {
           var b = parseInt(el.getAttribute('data-build'), 10) || 0, k = buildFrom(el);
           s.appendChild(hint((k > 1 ? 'Bullets 1–' + (k - 1) + ' show from the start. ' : '') +
             'Bullet ' + k + (nItems > k ? '–' + nItems : '') + ' appear' + (nItems > k ? '' : 's') + ' on click' + (nItems > k ? 's ' + b + '–' + lastStep(el) : ' ' + b) +
-            '. Lines count as bullets in a box without a list. Use the Appear effect for no fade.'));
+            '. Lines count as bullets in a box without a list. Use the Fade in effect for a fade.'));
         }
       }
       s.appendChild(row('', btn('Build selected in sequence', function () {
         var start = 0;
         M.elements(slide).forEach(function (e) { if (C.sel.indexOf(e) < 0) start = Math.max(start, lastStep(e)); });
         var ordered = M.elements(slide).filter(function (e) { return C.sel.indexOf(e) >= 0; });
-        ordered.forEach(function (e) { e.setAttribute('data-build', String(start + 1)); start = lastStep(e); });
+        ordered.forEach(function (e) { setBuild(e, start + 1); start = lastStep(e); });
         C.renderSelection(); M.history.push();
       }), btn('Same step', function () {
         var n = 1; M.elements(slide).forEach(function (e) { if (C.sel.indexOf(e) < 0) n = Math.max(n, lastStep(e) + 1); });
-        applySel(function (e) { e.setAttribute('data-build', String(n)); });
+        applySel(function (e) { setBuild(e, n); });
       })));
       s.appendChild(hint('Objects with build order N appear on the Nth click. The orange badge on the canvas shows the order. Several objects may share a step.'));
       body.appendChild(s);
@@ -486,10 +574,10 @@ KH.inspector = (function () {
       var label = M.type(e) + ': ' + (e.textContent.trim().slice(0, 28) || (e.querySelector('img') ? basename(e.querySelector('img').getAttribute('src')) : ''));
       var r = h('div', { class: 'insp-row' }, h('span', { style: { minWidth: '22px', marginRight: '4px', fontWeight: '600', color: '#ff9500' } }, stepLabel(e)),
         h('span', { style: { flex: '1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', cursor: 'pointer' }, onclick: function () { C.select([e]); } }, label),
-        btn('×', function () { e.removeAttribute('data-build'); M.history.push(); }));
+        btn('×', function () { clearBuild(e); M.history.push(); }));
       list.appendChild(r);
     });
-    if (built.length) list.appendChild(row('', btn('Clear all builds', function () { built.forEach(function (e) { e.removeAttribute('data-build'); }); M.history.push(); })));
+    if (built.length) list.appendChild(row('', btn('Clear all builds', function () { built.forEach(clearBuild); M.history.push(); })));
     body.appendChild(list);
     var tr = sec('Transition');
     tr.appendChild(row('This slide', sel([['', 'Deck default'], ['none', 'None'], ['fade', 'Fade'], ['push', 'Push'], ['zoom', 'Zoom']],
@@ -541,7 +629,8 @@ KH.inspector = (function () {
     adv.appendChild(stack('Custom CSS (scoped to the deck)', ta(function () { return M.customCss; }, function (v) { M.customCss = v; KH.io.applyCustomCss(); KH.nav.refresh(); M.history.push(); }, '', '.kh-slide h1 { letter-spacing: -0.02em }')));
     adv.appendChild(stack('Custom JavaScript (runs when presenting)', ta(function () { return M.customJs; }, function (v) { M.customJs = v; M.history.push(); }, '', "document.addEventListener('kh:slide', e => { /* e.detail.index, e.detail.slide */ });")));
     adv.appendChild(stack('External scripts (one path per line, relative to the deck)', ta(function () { return (M.scripts || []).join('\n'); }, function (v) { M.scripts = v.split(/\n/).map(function (x) { return x.trim(); }).filter(Boolean); M.history.push(); }, '', 'data/my_data.js')));
-    adv.appendChild(hint('Hooks while presenting: kh:ready, kh:slide (detail: index, step, slide), kh:next / kh:prev (cancelable), and window.khPlayer. Custom JS does not run inside the editor.'));
+    adv.appendChild(row('', check('Live preview of scripted HTML blocks', function () { return KH.preview.enabled; }, function (v) { KH.preview.setEnabled(v); })));
+    adv.appendChild(hint('Hooks while presenting: kh:ready, kh:slide (detail: index, step, slide), kh:next / kh:prev (cancelable), and window.khPlayer. In the editor, custom JS runs only inside the isolated live preview laid over HTML blocks that hold a canvas, a data-demo or a script.'));
     body.appendChild(adv);
 
     var act = sec('Actions');

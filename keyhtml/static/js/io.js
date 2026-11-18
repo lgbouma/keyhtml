@@ -340,6 +340,25 @@ KH.io = (function () {
     var n = fromStart ? 1 : M.cur + 1;
     return IO.save({ quiet: true }).then(pickScreens).then(function (scr) { startShow(n, scr); });
   };
+  /* Rehearse: the slides and the presenter view (notes, next slide, timer) each in an ordinary window of
+     their own, e.g. to share only the slides in a video call while reading the notes. This opens the
+     slides window; the player in it (?rehearse) opens the presenter window beside itself and the two
+     talk to each other, so the editor stays free. Both windows are named: Rehearse again reloads them
+     in place, with the saved deck, at the current slide. */
+  IO.rehearse = function (fromStart) {
+    var n = fromStart ? 1 : M.cur + 1;
+    return IO.save({ quiet: true }).then(function () {
+      var sc = window.screen, w = Math.min(1280, Math.round(sc.availWidth * 0.6));
+      var url = IO.deckUrl() + '?rehearse=' + Date.now() + '#' + n; // a new query each time: a real reload, not a jump within the page
+      var feat = 'popup,left=' + (sc.availLeft || 0) + ',top=' + (sc.availTop || 0) + ',width=' + w + ',height=' + Math.round(w * M.H / M.W);
+      var open = function () { var win = window.open(url, 'khslides', feat); if (win) win.focus(); return win; };
+      if (open()) return;
+      // No user activation left (a slow save, a dialog in between): one more click opens the window.
+      return KH.ui.confirm('Rehearse', 'The browser did not open the slides window. Open it now?', 'Open').then(function (yes) {
+        if (yes && !open()) KH.toast('The browser blocked the slides window. Allow pop-ups for this page and press Rehearse again.', 'error', 8000);
+      });
+    });
+  };
   IO.playInTab = function (fromStart) {
     return IO.save({ quiet: true }).then(function () {
       window.open(IO.deckUrl() + '#' + (fromStart ? 1 : M.cur + 1), 'keyhtml-play');

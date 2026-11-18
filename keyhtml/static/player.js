@@ -1,7 +1,10 @@
 /* keyhtml player runtime. Embedded in every saved deck; no external dependencies.
    Keys: → ↓ space PgDn: next · ← ↑ PgUp: prev · Home/End · f: fullscreen · o/Esc: overview
          b: black · n: presenter window (notes) · ?: help · digits+Enter: go to slide
-   URL: deck.html#7 opens slide 7 · ?presenter presenter view · ?print one slide per page */
+   URL: deck.html#7 opens slide 7 · ?presenter presenter view · ?print one slide per page
+        ?rehearse slides in this window, presenter view in a second one beside it (the editor's Rehearse)
+   The editor's live preview sets window.__khPreview = {slide, step} before this script runs: one slide,
+   all builds shown, no input handling (mode 'preview'). */
 (function () {
   'use strict';
   if (window.__khPlayer) return;
@@ -12,9 +15,11 @@
   var W = parseInt(deck.getAttribute('data-width'), 10) || 1920;
   var H = parseInt(deck.getAttribute('data-height'), 10) || 1080;
   var params = new URLSearchParams(location.search);
-  var mode = params.has('print') ? 'print' : params.has('presenter') ? 'presenter' : 'play';
+  var preview = window.__khPreview || null;
+  var mode = params.has('print') ? 'print' : params.has('presenter') ? 'presenter' : preview ? 'preview' : 'play';
+  var rehearse = mode === 'play' && params.has('rehearse'), loadId = Date.now();
   var allSlides = Array.prototype.slice.call(deck.querySelectorAll('.kh-slide'));
-  var slides = mode === 'print' ? allSlides : allSlides.filter(function (s) { return !s.hasAttribute('data-skip'); });
+  var slides = (mode === 'print' || mode === 'preview') ? allSlides : allSlides.filter(function (s) { return !s.hasAttribute('data-skip'); });
   if (!slides.length) slides = allSlides;
   var cur = 0, step = 0;
   var presenterWin = null, overviewEl = null, blackEl = null, helpEl = null, numEl = null;
@@ -167,6 +172,7 @@
     else if (cur > 0) show(cur - 1, maxStep(slides[cur - 1]), -1);
   }
   function updateHash() {
+    if (mode === 'preview') return;
     var h = '#' + (cur + 1);
     if (location.hash !== h) { try { history.replaceState(null, '', h); } catch (e) { location.hash = h; } }
   }
@@ -196,6 +202,8 @@
       deck.style.top = Math.round((window.innerHeight - H * s) / 2) + 'px';
     } else if (mode === 'presenter') {
       layoutPresenter();
+    } else if (mode === 'preview') {
+      deck.style.transform = 'none'; deck.style.left = '0'; deck.style.top = '0';
     }
   }
 
@@ -276,9 +284,36 @@
 
   // ---- presenter ------------------------------------------------------------
   function openPresenter() {
-    var url = location.pathname + '?presenter' + '#' + (cur + 1);
-    var w = window.open(url, 'khpresenter', 'width=1280,height=800');
+    var url = location.pathname + '?presenter' + '#' + (cur + 1), feat = 'width=1280,height=800';
+    if (rehearse) {
+      // Beside this window, on the same screen. The load id makes the presenter window reload whenever
+      // this one does (a changed deck, Rehearse pressed again), and only then.
+      var sc = window.screen, right = (sc.availLeft || 0) + sc.availWidth, left = window.screenX + window.outerWidth;
+      var wd = Math.max(480, right - left); left = Math.min(left, right - wd); // no room beside: overlap from the right edge
+      url = location.pathname + '?presenter&rehearse=' + loadId + '#' + (cur + 1);
+      feat = 'popup,left=' + left + ',top=' + (sc.availTop || 0) + ',width=' + wd + ',height=' + sc.availHeight;
+    }
+    // its own window name: never a presenter window left over from Play, whose opener is another window
+    var w = window.open(url, rehearse ? 'khnotes' : 'khpresenter', feat);
     if (w) presenterWin = w;
+    return w;
+  }
+  /* Rehearse (?rehearse): the slides in this window and the presenter view in a second, ordinary window,
+     e.g. to share only the slides in a video call. A window that no key or click asked for is a pop-up
+     to the browser; when it is blocked, the first key or click in this window opens it instead. */
+  function startRehearsal() {
+    if (openPresenter()) return;
+    var tip = el('div', '', 'Press any key or click to open the presenter notes window' +
+      '<small>The browser blocked it as a pop-up. Allow pop-ups for this page to skip this step.</small>');
+    tip.id = 'kh-rehearse-tip'; document.body.appendChild(tip);
+    var once = function (e) {
+      if (e.type === 'keydown' && (e.metaKey || e.ctrlKey || e.altKey || /^(Escape|Shift|Meta|Control|Alt|CapsLock)$/.test(e.key))) return;
+      e.preventDefault(); e.stopImmediatePropagation(); // this key or click opens the window, it does not advance the slides
+      if (!openPresenter()) return;
+      document.removeEventListener('keydown', once, true); document.removeEventListener('click', once, true);
+      tip.remove();
+    };
+    document.addEventListener('keydown', once, true); document.addEventListener('click', once, true);
   }
   function notifyPresenter() {
     if (mode !== 'play' || !presenterWin) return;
@@ -324,7 +359,12 @@
       var d = new Date();
       pres.clock.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }, 500);
+    document.title = 'Presenter notes' + (document.title ? ' · ' + document.title : ''); // tell the two windows apart in a window list
     if (window.opener) { try { window.opener.postMessage({ kh: 'hello' }, '*'); } catch (e) {} }
+    if (params.has('rehearse') && window.opener) { // Rehearse: this window closes with the slides window that opened it
+      var slidesWin = window.opener;
+      setInterval(function () { if (slidesWin.closed) window.close(); }, 500);
+    }
   }
   function layoutPresenter() {
     if (!pres) return;
@@ -372,7 +412,7 @@
   function gotoTyped() {
     if (digitBuffer) { var n = parseInt(digitBuffer, 10); digitBuffer = ''; if (n >= 1) { if (mode === 'presenter') sendNav('goto', n - 1); else show(n - 1, 0, 0); } }
   }
-  document.addEventListener('keydown', function (e) {
+  if (mode !== 'preview') document.addEventListener('keydown', function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     var t = e.target;
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
@@ -420,7 +460,7 @@
       cursorTimer = setTimeout(function () { document.body.style.cursor = 'none'; }, 3000);
     });
   }
-  window.addEventListener('hashchange', function () { var n = slideFromHash(); if (n !== cur) show(n, 0, 0); });
+  if (mode !== 'preview') window.addEventListener('hashchange', function () { var n = slideFromHash(); if (n !== cur) show(n, 0, 0); });
   window.addEventListener('resize', layout);
 
   // ---- init -----------------------------------------------------------------
@@ -448,9 +488,11 @@
       }
       allSlides.forEach(function (s) { applyBuilds(s, 0, false); });
       hook('kh:ready', { mode: mode, slides: slides });
-      show(slideFromHash(), 0, 0);
+      if (mode === 'preview') show(preview.slide | 0, preview.step == null ? 9999 : preview.step, 0);
+      else show(slideFromHash(), 0, 0);
       layout();
       setTimeout(layout, 50);
+      if (rehearse) startRehearsal();
     }
   }
   // Deferred so that custom scripts placed after the player can register kh:* listeners first.

@@ -44,6 +44,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Ari
 #kh-help.kh-on{display:block}
 #kh-help h3{margin:0 0 10px;font-weight:600;font-size:17px}
 #kh-help kbd{display:inline-block;min-width:1.6em;text-align:center;background:#333;border:1px solid #555;border-radius:5px;padding:0 6px;margin-right:8px;font-family:inherit;font-size:13px}
+#kh-rehearse-tip{position:fixed;left:0;right:0;bottom:28px;margin:0 auto;width:fit-content;max-width:calc(100vw - 48px);box-sizing:border-box;background:rgba(20,20,22,.94);color:#eee;padding:12px 22px;border-radius:10px;font-size:15px;line-height:1.5;text-align:center;z-index:70;box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
+#kh-rehearse-tip small{display:block;font-size:12px;color:#a8a8ad}
 #kh-overview{position:fixed;inset:0;background:#141416;overflow:auto;display:none;z-index:40;padding:36px;box-sizing:border-box}
 #kh-overview.kh-on{display:block}
 #kh-overview .kh-ov-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:26px}

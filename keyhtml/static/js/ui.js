@@ -28,11 +28,16 @@ KH.ui = (function () {
       if (pr.right > window.innerWidth - 8) pop.style.left = Math.max(8, window.innerWidth - pr.width - 8) + 'px';
       if (pr.bottom > window.innerHeight - 8) pop.style.top = Math.max(8, (opts.x != null ? y - pr.height : window.innerHeight - pr.height - 8)) + 'px';
     });
-    pop.anchor = anchor;
+    pop.anchor = anchor; pop.onClose = opts.onClose || null;
     openPop = pop;
     return pop;
   };
-  U.closePopovers = function () { if (!openPop) return false; openPop.remove(); openPop = null; return true; };
+  U.closePopovers = function () {
+    if (!openPop) return false;
+    var p = openPop; openPop = null; p.remove();
+    if (p.onClose) p.onClose();
+    return true;
+  };
   U.menu = function (items) {
     var m = h('div', { class: 'menu' });
     items.forEach(function (it) {
@@ -135,6 +140,60 @@ KH.ui = (function () {
       } }] });
   };
 
+  // ---------------------------------------------------------------- code block editor
+  U.lastCode = { lang: 'auto', theme: 'dark' }; // what the next new block starts with
+  U.editCode = function (el) {
+    var K = KH.code;
+    var ta = h('textarea', { spellcheck: 'false', wrap: 'off', style: { minHeight: '220px', fontSize: '12.5px', whiteSpace: 'pre', tabSize: '4' } });
+    ta.value = el ? K.source(el) : '';
+    var lang = h('select'), theme = h('select');
+    K.LANGS.forEach(function (o) { lang.appendChild(h('option', { value: o[0] }, o[1])); });
+    [['dark', 'Dark'], ['light', 'Light']].forEach(function (o) { theme.appendChild(h('option', { value: o[0] }, o[1])); });
+    lang.value = el ? K.lang(el) : U.lastCode.lang; if (!lang.value) lang.value = 'auto';
+    theme.value = el ? K.theme(el) : U.lastCode.theme;
+    var shown = h('div', { class: 'kh-code' }, h('pre', {}, h('code')));
+    var preview = h('div', { class: 'preview code-preview' }, shown);
+    var render = KH.debounce(function () {
+      shown.classList.toggle('kh-code-light', theme.value === 'light');
+      shown.querySelector('code').innerHTML = K.html(K.clean(ta.value) || ' ', lang.value);
+    }, 120);
+    ta.addEventListener('input', render); lang.addEventListener('change', render); theme.addEventListener('change', render);
+    ta.addEventListener('keydown', function (e) { // Tab indents (four spaces) instead of leaving the field
+      if (e.key !== 'Tab' || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      e.preventDefault(); document.execCommand('insertText', false, '    ');
+    });
+    render();
+    var opts = h('div', { class: 'code-opts' }, h('label', {}, 'Language ', lang), h('label', {}, 'Theme ', theme));
+    var body = h('div', {}, opts, ta, preview,
+      h('div', { class: 'hint' }, K.ready() ? 'Paste or type the code. It is highlighted here in the editor and saved as plain colored text, so the deck needs no script for it.'
+        : 'The highlighter could not be loaded: the code is shown without colors.'));
+    var m = U.modal({ title: el ? 'Edit Code' : 'Insert Code', body: body, width: '760px',
+      buttons: [{ label: 'Cancel' }, { label: el ? 'Apply' : 'Insert', primary: true, action: function () {
+        var code = K.clean(ta.value);
+        if (!code.trim()) return false;
+        U.lastCode = { lang: lang.value, theme: theme.value };
+        if (el) {
+          el.setAttribute('data-lang', lang.value); K.theme(el, theme.value);
+          K.render(el, code);
+          M.fitAncestors(el);
+          KH.canvas.renderSelection();
+          M.history.push();
+        } else {
+          var n = M.create.code({ code: code, lang: lang.value, theme: theme.value });
+          var w = KH.px(n.style.width), hh = KH.px(n.style.height);
+          if (w > M.W - 120 || hh > M.H - 120) { // too large for the slide at the default size: scale it down to fit
+            var f = Math.min((M.W - 120) / w, (M.H - 120) / hh);
+            K.setFontSize(n, Math.max(8, Math.floor(K.fontSize(n) * f)));
+            w = KH.px(n.style.width); hh = KH.px(n.style.height);
+          }
+          KH.canvas.centerAt(n, w, hh);
+          KH.canvas.insert(n);
+        }
+      } }] });
+    setTimeout(function () { ta.focus(); }, 0);
+    return m;
+  };
+
   // ---------------------------------------------------------------- html source editor
   U.editHtml = function (el) {
     var ta = h('textarea', { spellcheck: 'false', style: { minHeight: '320px', fontSize: '12px' } });
@@ -235,7 +294,7 @@ KH.ui = (function () {
       ['⌥-drag', 'Duplicate while dragging; hold ⌥ to disable snapping'], ['⌘] / ⌘[', 'Bring forward / send backward (⇧ to front / back)'], ['⌘L', 'Lock / unlock'],
       ['⌘G / ⇧⌘G', 'Group / ungroup (double-click a group to select an object inside; Esc steps out)'],
       ['⌘K or ⏎', 'Crop the selected image (also double-click it); drag to pan, handles set the window'],
-      ['⌘B ⌘I ⌘U', 'Bold, italic, underline'], ['⌥⌘0', 'Reset text color to the deck default'], ['⇧⌘N', 'New slide'], ['⌘= / ⌘- / ⌘0', 'Zoom in / out / fit'], ['$…$', 'Inline LaTeX in any text box; $$…$$ for display math'],
+      ['⌘B ⌘I ⌘U', 'Bold, italic, underline'], ['⌘K', 'Link the selected text (⌘-click a link in the editor to open it)'], ['⌥⌘0', 'Reset text color to the deck default'], ['⇧⌘N', 'New slide'], ['⌘= / ⌘- / ⌘0', 'Zoom in / out / fit'], ['$…$', 'Inline LaTeX in any text box; $$…$$ for display math'],
       ['Right-click', 'Context menu on objects, slides and the navigator'],
     ];
     var body = h('div', { style: { fontSize: '12.5px', lineHeight: '1.6', columns: '2', columnGap: '28px' } });

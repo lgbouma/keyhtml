@@ -122,6 +122,88 @@ KH.nav = (function () {
     M.history.push(); N.refresh();
   };
 
+  // ------------------------------------------------------------ clipboard
+  /* ⌘C / ⌘X with the keyboard focus in the navigator copy the selected slides (not the objects that
+     happen to be selected on the current slide); ⌘V pastes copied slides after the current one, from
+     the navigator or the canvas, also into another deck open in another editor tab. */
+  var CLIP = 'application/x-keyhtml-slides';
+  /* "In the navigator" = the last click went there. The keyboard focus alone will not do: it stays on the
+     list when an object on the slide is clicked afterwards. */
+  var navActive = false;
+  document.addEventListener('mousedown', function (e) { navActive = !!list && list.contains(e.target); }, true);
+  document.addEventListener('focusin', function (e) { if (e.target === list) navActive = true; }, true);
+  function inList() { return navActive && document.activeElement === list; }
+  function inField(t) { return !!t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
+  function selection() {
+    var n = M.slides().length;
+    var s = N.selected.filter(function (i, k, a) { return i >= 0 && i < n && a.indexOf(i) === k; }).sort(function (a, b) { return a - b; });
+    return s.length ? s : [M.cur];
+  }
+  N.copy = function (indices) {
+    if (KH.text.editing) KH.text.exit();
+    var slides = M.slides();
+    indices = (indices || selection()).slice().sort(function (a, b) { return a - b; });
+    var texts = [];
+    var htmls = indices.map(function (i) {
+      var c = slides[i].cloneNode(true);
+      c.classList.remove('kh-current', 'kh-leaving', 'kh-enter', 'kh-drop-target');
+      c.removeAttribute('data-kh-conflict');
+      KH.$$('[contenteditable]', c).forEach(function (b) { b.removeAttribute('contenteditable'); });
+      KH.$$('.kh-editing', c).forEach(function (b) { b.classList.remove('kh-editing'); });
+      texts.push(KH.$$('.kh-el', c).map(function (el) { return el.textContent.trim(); }).filter(Boolean).join('\n'));
+      return c.outerHTML;
+    });
+    N.clipboard = JSON.stringify({ keyhtml: 1, slides: htmls });
+    N.clipboardText = texts.filter(Boolean).join('\n\n');
+    return N.clipboard;
+  };
+  /* Insert copied slides after the selected ones (after the current slide when nothing else is selected). */
+  N.paste = function (payload) {
+    var htmls;
+    try { htmls = JSON.parse(payload || N.clipboard).slides; } catch (e) { return false; }
+    if (!htmls || !htmls.length) return false;
+    if (KH.text.editing) KH.text.exit();
+    var sel = selection(), at = sel[sel.length - 1] + 1, first = at;
+    var tpl = document.createElement('template');
+    htmls.forEach(function (html) {
+      tpl.innerHTML = html;
+      var s = tpl.content.firstElementChild;
+      if (!s || !s.classList.contains('kh-slide')) return;
+      s = document.importNode(s, true);
+      s.classList.remove('kh-current');
+      s.setAttribute('data-kh-id', M.newSlideId()); // a copy is a new slide (see model.js)
+      var slides = M.slides();
+      if (at >= slides.length) M.deck.appendChild(s); else M.deck.insertBefore(s, slides[at]);
+      at++;
+    });
+    if (at === first) return false;
+    N.selected = [];
+    for (var k = first; k < at; k++) N.selected.push(k);
+    M.setCurrent(first);
+    M.history.push(); N.refresh();
+    return true;
+  };
+  function onCopy(e) {
+    if (!inList() || !M.deck || (KH.ui && KH.ui.modalOpen())) return;
+    var payload = N.copy();
+    try { e.clipboardData.setData('text/plain', N.clipboardText || ' '); e.clipboardData.setData(CLIP, payload); } catch (err) {}
+    e.preventDefault(); e.stopImmediatePropagation(); // not the canvas: it would copy the selected objects instead
+    if (e.type === 'cut') N.remove(selection());
+  }
+  function onPaste(e) {
+    if (!M.deck || KH.text.editing || (inField(e.target) && e.target !== list) || (KH.ui && KH.ui.modalOpen())) return;
+    var cd = e.clipboardData, data = '', text = '';
+    try { data = cd.getData(CLIP); text = cd.getData('text/plain'); } catch (err) {}
+    // copied with the context menu (no clipboard event): the slides are only in N.clipboard
+    if (!data && inList() && N.clipboard && (!text || text === N.clipboardText)) data = N.clipboard;
+    if (!data) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    N.paste(data);
+  }
+  document.addEventListener('copy', onCopy, true);
+  document.addEventListener('cut', onCopy, true);
+  document.addEventListener('paste', onPaste, true);
+
   // ------------------------------------------------------------ mouse
   function itemIndex(e) { var it = e.target.closest('.nav-item'); return it ? parseInt(it.getAttribute('data-i'), 10) : -1; }
   function onMouseDown(e) {
@@ -141,6 +223,8 @@ KH.nav = (function () {
       if (N.selected.indexOf(i) < 0 || N.selected.length <= 1) N.goto(i);
     }
     dragState = { startY: e.clientY, moving: false, indices: N.selected.slice().sort(function (a, b) { return a - b; }) };
+    // a plain click on one of several selected slides: they stay selected for a drag, else it selects just that one
+    if (!e.shiftKey && !e.metaKey && !e.ctrlKey && N.selected.length > 1) dragState.single = i;
   }
   function onMouseMove(e) {
     if (!dragState) return;
@@ -161,6 +245,7 @@ KH.nav = (function () {
     if (!dragState) return;
     var d = dragState; dragState = null;
     var ind = list.querySelector('.nav-drop-indicator'); if (ind) ind.remove();
+    if (!d.moving && d.single != null) { N.goto(d.single); return; }
     if (!d.moving || d.to == null) return;
     var to = d.to;
     var allBefore = d.indices.every(function (i) { return i < to; });
@@ -176,6 +261,9 @@ KH.nav = (function () {
     var skipped = i >= 0 && M.slides()[i].hasAttribute('data-skip');
     KH.ui.contextMenu([
       { label: 'New Slide', shortcut: '⇧⌘N', action: function () { N.addSlide(); } },
+      { label: 'Cut', shortcut: '⌘X', disabled: i < 0, action: function () { N.copy(sel); N.remove(sel); } },
+      { label: 'Copy', shortcut: '⌘C', disabled: i < 0, action: function () { N.copy(sel); } },
+      { label: 'Paste', shortcut: '⌘V', disabled: !N.clipboard, action: function () { N.paste(); } },
       { label: 'Duplicate', shortcut: '⌘D', disabled: i < 0, action: function () { N.duplicate(sel); } },
       { label: 'Delete', shortcut: '⌫', disabled: i < 0, action: function () { N.remove(sel); } },
       { sep: true },
@@ -183,6 +271,9 @@ KH.nav = (function () {
     ], e.clientX, e.clientY);
   }
   function onKeyDown(e) {
+    // The list keeps the keyboard focus when an object on the slide is clicked afterwards. Those keys
+    // belong to the canvas (⌫ deletes the object, not the slide; arrows nudge it): let them pass.
+    if (!navActive) return;
     var mod = e.metaKey || e.ctrlKey;
     if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); e.stopPropagation(); N.remove(N.selected); }
     else if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); e.stopPropagation(); N.duplicate(N.selected); }
@@ -192,6 +283,7 @@ KH.nav = (function () {
       if (e.shiftKey) { if (N.selected.indexOf(i) < 0) N.selected.push(i); M.setCurrent(i); N.highlight(); } else N.goto(i);
     } else if (mod && e.key === 'a') { e.preventDefault(); e.stopPropagation(); N.selected = M.slides().map(function (_, k) { return k; }); N.highlight(); }
   }
+  N.scaleThumbs = function () { if (list) scaleThumbs(); };
   window.addEventListener('resize', KH.debounce(scaleThumbs, 100));
   return N;
 })();

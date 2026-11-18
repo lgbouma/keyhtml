@@ -17,6 +17,11 @@ window.MathJax = {
 };
 </script>
 <script src="/static/vendor/mathjax/tex-svg-full.js" async></script>
+<script src="/static/vendor/highlight/highlight.min.js" defer></script>
+<script src="/static/vendor/highlight/fortran.min.js" defer></script>
+<script src="/static/vendor/highlight/julia.min.js" defer></script>
+<script src="/static/vendor/highlight/latex.min.js" defer></script>
+<script src="/static/vendor/highlight/matlab.min.js" defer></script>
 </head>
 <body>
 <div id="app">
@@ -38,10 +43,12 @@ window.MathJax = {
       <button class="tb-btn" id="tb-shape" title="Shape"><span class="tb-icon" data-icon="shape"></span><span class="tb-label">Shape ▾</span></button>
       <button class="tb-btn" id="tb-media" title="Image, PDF, movie"><span class="tb-icon" data-icon="media"></span><span class="tb-label">Media ▾</span></button>
       <button class="tb-btn" id="tb-math" title="LaTeX equation"><span class="tb-icon" data-icon="math"></span><span class="tb-label">Equation</span></button>
+      <button class="tb-btn" id="tb-code" title="Code block with syntax highlighting"><span class="tb-icon" data-icon="code"></span><span class="tb-label">Code</span></button>
       <button class="tb-btn" id="tb-table" title="Table"><span class="tb-icon" data-icon="table"></span><span class="tb-label">Table</span></button>
       <button class="tb-btn" id="tb-html" title="Raw HTML block"><span class="tb-icon" data-icon="html"></span><span class="tb-label">HTML</span></button>
       <div class="tb-sep"></div>
       <button class="tb-btn" id="tb-play" title="Play from current slide (⌥⌘P)"><span class="tb-icon" data-icon="play"></span><span class="tb-label">Play</span></button>
+      <button class="tb-btn" id="tb-rehearse" title="Rehearse from current slide: slides and presenter notes in two separate windows"><span class="tb-icon" data-icon="rehearse"></span><span class="tb-label">Rehearse</span></button>
     </div>
     <div class="tb-group tb-right">
       <span id="tb-status" class="tb-status"></span>
@@ -60,6 +67,7 @@ window.MathJax = {
       <div id="nav-list"></div>
       <div id="nav-footer"><button id="nav-add" title="Add slide">+</button></div>
     </aside>
+    <div class="col-grip" id="nav-grip" title="Drag to resize the slide list (double-click to reset)"></div>
     <div id="stage">
       <div id="canvas-wrap">
         <div id="canvas-sizer">
@@ -76,6 +84,7 @@ window.MathJax = {
         <div id="kh-notes-edit" contenteditable="true" spellcheck="true" data-placeholder="Notes for this slide (shown in the presenter window)"></div>
       </div>
     </div>
+    <div class="col-grip" id="insp-grip" title="Drag to resize the inspector (double-click to reset)"></div>
     <aside id="inspector">
       <div id="inspector-body"></div>
     </aside>
@@ -90,10 +99,12 @@ window.MathJax = {
 <script src="/static/js/icons.js"></script>
 <script src="/static/js/model.js"></script>
 <script src="/static/js/math.js"></script>
+<script src="/static/js/code.js"></script>
 <script src="/static/js/shapes.js"></script>
 <script src="/static/js/layouts.js"></script>
 <script src="/static/js/text.js"></script>
 <script src="/static/js/canvas.js"></script>
+<script src="/static/js/preview.js"></script>
 <script src="/static/js/inspector.js"></script>
 <script src="/static/js/navigator.js"></script>
 <script src="/static/js/ui.js"></script>

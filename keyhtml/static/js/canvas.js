@@ -20,6 +20,13 @@ KH.canvas = (function () {
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
     wrap.addEventListener('dblclick', onDblClick);
+    // A link in a text box must not navigate the editor; ⌘-click opens it in a new tab.
+    wrap.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('a[href]');
+      if (!a || !canvas.contains(a)) return;
+      e.preventDefault();
+      if (e.metaKey || e.ctrlKey) window.open(a.href, '_blank', 'noopener');
+    });
     wrap.addEventListener('contextmenu', onContextMenu);
     window.addEventListener('resize', function () { if (C.fitMode) C.fit(); });
     document.addEventListener('keydown', onKeyDown);
@@ -35,6 +42,7 @@ KH.canvas = (function () {
   C.mount = function (deck) {
     canvas.innerHTML = '';
     canvas.appendChild(deck);
+    if (KH.preview) canvas.appendChild(KH.preview.layer); // live preview of scripted HTML blocks, under the selection overlay
     canvas.appendChild(overlay);
     C.sel = []; if (C.crop) C.exitCrop(true);
     C.fit();
@@ -44,6 +52,7 @@ KH.canvas = (function () {
     canvas.style.setProperty('--z', z);
     canvas.style.width = M.W + 'px'; canvas.style.height = M.H + 'px';
     overlay.style.width = M.W + 'px'; overlay.style.height = M.H + 'px';
+    if (KH.preview) { KH.preview.layer.style.width = M.W + 'px'; KH.preview.layer.style.height = M.H + 'px'; }
     sizer.style.width = (M.W * z) + 'px'; sizer.style.height = (M.H * z) + 'px';
     C.renderSelection();
     KH.emit('zoom', z);
@@ -330,6 +339,7 @@ KH.canvas = (function () {
     M.setGeom(d.el, geom);
     if (d.etype === 'line') KH.shapes.renderLine(d.el);
     if (d.etype === 'math') KH.math.syncSizeFromBox(d.el);
+    if (d.etype === 'code') KH.code.syncSizeFromBox(d.el);
     if (d.etype === 'group') M.scaleGroupTo(d.el, d.snap, w, hh);
     var ag = M.absGeom(d.el);
     drag.measure = { text: Math.round(w) + ' × ' + Math.round(geom.h == null ? d.el.offsetHeight : hh), x: ag.x, y: ag.y + ag.h + 10 / C.zoom };
@@ -354,6 +364,7 @@ KH.canvas = (function () {
     if (t === 'group') { var kid = childUnder(el, e.target); if (kid) C.select([kid]); return; }
     if (t === 'text' || t === 'shape' || t === 'html') { if (!M.isLocked(el)) KH.text.enter(el, e); }
     else if (t === 'math') KH.ui.editEquation(el);
+    else if (t === 'code') KH.ui.editCode(el);
     else if (t === 'image') { if (!M.isLocked(el)) C.enterCrop(el); }
     else if (t === 'video') KH.ui.toggleVideoPreview(el);
   }
@@ -527,7 +538,7 @@ KH.canvas = (function () {
   };
   C.centerOnSlide = function (axis) { if (!C.sel.length) return; M.centerOnSlide(C.sel, axis); C.sel.forEach(M.fitAncestors); C.renderSelection(); M.history.push(); };
   C.align = function (how) { M.align(C.sel, how); C.sel.forEach(M.fitAncestors); C.renderSelection(); M.history.push(); };
-  C.distribute = function (axis) { M.distribute(C.sel, axis); C.sel.forEach(M.fitAncestors); C.renderSelection(); M.history.push(); };
+  C.distribute = function (axis) { if (C.sel.length < 3) return; M.distribute(C.sel, axis); C.sel.forEach(M.fitAncestors); C.renderSelection(); M.history.push(); };
   /* apply a function to every selected element, then commit */
   C.apply = function (fn, opts) {
     C.sel.forEach(fn);
@@ -638,6 +649,7 @@ KH.canvas = (function () {
     var el = C.single(), t = el ? M.type(el) : null, items = [];
     if (el && (t === 'text' || t === 'shape' || t === 'html')) items.push({ label: 'Edit Text', action: function () { KH.text.enter(el); } });
     if (el && t === 'math') items.push({ label: 'Edit Equation…', action: function () { KH.ui.editEquation(el); } });
+    if (el && t === 'code') items.push({ label: 'Edit Code…', action: function () { KH.ui.editCode(el); } });
     if (el && t === 'html') items.push({ label: 'Edit HTML Source…', action: function () { KH.ui.editHtml(el); } });
     if (el && t === 'image') {
       items.push({ label: 'Crop Image', action: function () { C.enterCrop(el); } });
@@ -657,6 +669,9 @@ KH.canvas = (function () {
     items.push({ sep: true });
     items.push({ label: 'Center on Slide Horizontally', action: function () { C.centerOnSlide('h'); } });
     items.push({ label: 'Center on Slide Vertically', action: function () { C.centerOnSlide('v'); } });
+    items.push({ sep: true });
+    items.push({ label: 'Distribute Horizontally', disabled: C.sel.length < 3, action: function () { C.distribute('h'); } });
+    items.push({ label: 'Distribute Vertically', disabled: C.sel.length < 3, action: function () { C.distribute('v'); } });
     items.push({ sep: true });
     items.push({ label: 'Bring to Front', shortcut: '⇧⌘]', action: function () { C.reorder('front'); } });
     items.push({ label: 'Bring Forward', shortcut: '⌘]', action: function () { C.reorder('forward'); } });
@@ -692,6 +707,7 @@ KH.canvas = (function () {
       else if (k === 'Enter' && mod) { KH.text.exit(); e.preventDefault(); }
       else if (k === 'Tab') { document.execCommand(e.shiftKey ? 'outdent' : 'indent'); e.preventDefault(); }
       else if (mod && k.toLowerCase() === 's') { e.preventDefault(); KH.text.exit(); KH.io.save(); }
+      else if (mod && k.toLowerCase() === 'k') { e.preventDefault(); KH.text.link(); }
       return;
     }
     if (inInput(t)) {
@@ -720,6 +736,7 @@ KH.canvas = (function () {
       if (lk === 'e' && C.sel.length) { e.preventDefault(); C.align('centerh'); C.align('centerv'); return; }
       if (lk === 'g') { e.preventDefault(); if (e.shiftKey) C.ungroup(); else C.group(); return; }
       if (lk === 'k' && C.single() && M.type(C.single()) === 'image') { e.preventDefault(); if (C.crop) C.exitCrop(); else C.enterCrop(C.single()); return; }
+      if (lk === 'k' && C.single() && KH.text.canEdit(C.single())) { e.preventDefault(); KH.text.link(); return; }
       return;
     }
     var step = e.shiftKey ? 10 : 1;
@@ -749,6 +766,7 @@ KH.canvas = (function () {
         var el = C.single();
         if (el && KH.text.canEdit(el)) { e.preventDefault(); KH.text.enter(el); }
         else if (el && M.type(el) === 'math') { e.preventDefault(); KH.ui.editEquation(el); }
+        else if (el && M.type(el) === 'code') { e.preventDefault(); KH.ui.editCode(el); }
         else if (el && M.type(el) === 'image') { e.preventDefault(); C.enterCrop(el); }
         break;
       }

@@ -15,9 +15,11 @@ KH.toolbar = (function () {
     on('#tb-shape', function (e) { KH.ui.shapePicker(e.currentTarget); });
     on('#tb-media', function (e) { KH.ui.dropdown(e.currentTarget, mediaMenu()); });
     on('#tb-math', function () { if (KH.text.editing) KH.text.exit(); KH.ui.editEquation(); });
+    on('#tb-code', function () { if (KH.text.editing) KH.text.exit(); KH.ui.editCode(); });
     on('#tb-table', TB.insertTable);
     on('#tb-html', function () { if (KH.text.editing) KH.text.exit(); KH.ui.editHtml(); });
     on('#tb-play', function () { KH.io.play(); });
+    on('#tb-rehearse', function () { KH.io.rehearse(); });
     on('#tb-save', function () { KH.io.save(); });
     var zoom = KH.$('#tb-zoom');
     zoom.addEventListener('change', function () { if (zoom.value === 'fit') C.fit(); else C.setZoom(parseFloat(zoom.value), false); zoom.blur(); });
@@ -50,6 +52,8 @@ KH.toolbar = (function () {
       { label: 'Play from Start', action: function () { KH.io.play(true); } },
       { label: 'Play from Current Slide', shortcut: '⌥⌘P', action: function () { KH.io.play(); } },
       { label: 'Play in a Browser Tab', action: function () { KH.io.playInTab(); } },
+      { label: 'Rehearse from Start', action: function () { KH.io.rehearse(true); } },
+      { label: 'Rehearse from Current Slide', action: function () { KH.io.rehearse(); } },
       { label: 'Print / Save as PDF…', action: function () { KH.io.print(); } },
       { label: 'Export Standalone HTML…', action: function () { KH.io.exportStandalone(); } },
       { sep: true },
