@@ -1,5 +1,7 @@
 # keyhtml
 
+[![CI](https://github.com/lgbouma/keyhtml/actions/workflows/ci.yml/badge.svg)](https://github.com/lgbouma/keyhtml/actions/workflows/ci.yml)
+
 A Keynote-style slide editor whose documents are plain, self-contained `.html` files.
 
 ![keyhtml: editing, LaTeX, code, a live slider demo, and the HTML on disk](docs/demo.gif)
