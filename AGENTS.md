@@ -13,8 +13,8 @@
 
 ## Working on keyhtml
 
-- The README's "Layout of this repository" section maps the code. The
-  editor is plain JS in `keyhtml/static/js/` (no build step); the player
+- The "Layout of this repository" section of `docs/manual.md` maps the
+  code. The editor is plain JS in `keyhtml/static/js/` (no build step); the player
   that ships inside every deck is `keyhtml/static/player.js` and
   `player.css`.
 - Decks embed a copy of the player JS/CSS. A player change reaches a deck
