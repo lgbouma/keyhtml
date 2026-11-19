@@ -81,4 +81,22 @@ KH.toHex = function (css) {
   m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(rgb);
   return m ? '#' + [m[1], m[2], m[3]].map(function (x) { return ('0' + parseInt(x, 10).toString(16)).slice(-2); }).join('') : null;
 };
+// Editor appearance (the chrome around the slides, not the deck theme): 'light', 'dark' or 'system'.
+// editor.html sets data-ui-theme before first paint; this keeps it in step with the setting and the OS.
+KH.uiTheme = (function () {
+  var T = {}, mq = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+  T.pref = 'system';
+  try { T.pref = localStorage.getItem('keyhtml.uiTheme') || 'system'; } catch (e) {}
+  T.resolved = function () { return T.pref === 'system' ? (mq && mq.matches ? 'dark' : 'light') : T.pref; };
+  T.apply = function () { document.documentElement.setAttribute('data-ui-theme', T.resolved()); };
+  T.set = function (v) {
+    T.pref = v === 'light' || v === 'dark' ? v : 'system';
+    try { localStorage.setItem('keyhtml.uiTheme', T.pref); } catch (e) {}
+    T.apply();
+    if (KH.inspector && KH.inspector.refresh) KH.inspector.refresh(); // keep the Document tab's control in step
+  };
+  if (mq) (mq.addEventListener ? mq.addEventListener('change', T.apply) : mq.addListener(T.apply));
+  T.apply();
+  return T;
+})();
 KH.isTransparent = function (css) { return !css || css === 'transparent' || css === 'none' || /rgba\([^)]*,\s*0\)/.test(css); };

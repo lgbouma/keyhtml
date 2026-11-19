@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>keyhtml</title>
 <base href="/files/">
+<script>
+try { var t = localStorage.getItem('keyhtml.uiTheme') || 'system';
+  document.documentElement.setAttribute('data-ui-theme', t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t);
+} catch (e) {}
+</script>
 <link rel="stylesheet" href="/static/deck.css">
 <link rel="stylesheet" href="/static/editor.css">
 <script>
