@@ -221,6 +221,12 @@ body.notes-resizing{cursor:row-resize;user-select:none}
 .modal .preview.code-preview{justify-content:flex-start;align-items:flex-start;font-size:13px;max-height:260px;padding:10px}
 .modal .preview.code-preview .kh-code{font-size:13px}
 .modal .hint{font-size:11px;color:var(--ui-text2);margin-top:6px;line-height:1.4}
+.modal .set-row{margin-top:14px}
+.modal .set-row:first-child{margin-top:0}
+.modal .set-row .chk{font-size:12.5px;gap:8px}
+.modal .set-row select{height:24px;border:1px solid var(--ui-border2);border-radius:5px;background:var(--ui-field);padding:0 5px}
+.modal .settings .hint{margin-top:3px}
+.modal .settings .set-note{margin-top:16px;padding-top:10px;border-top:1px solid var(--ui-border)}
 .modal .error{color:var(--ui-danger);font-size:12px;margin-top:6px;white-space:pre-wrap}
 .mbtn{height:28px;border:1px solid var(--ui-border2);border-radius:6px;background:var(--ui-field);padding:0 14px;font-size:12.5px}
 .mbtn.primary{background:var(--ui-accent);border-color:var(--ui-accent);color:#fff}

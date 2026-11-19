@@ -285,6 +285,28 @@ KH.ui = (function () {
     load(curDir);
   };
 
+  // Preferences of this browser (localStorage), as opposed to the deck's own settings in the Document tab.
+  U.settings = function () {
+    function check(label, on, set) {
+      var c = h('input', { type: 'checkbox' }); c.checked = !!on;
+      c.addEventListener('change', function () { set(c.checked); });
+      return h('label', { class: 'chk' }, c, label);
+    }
+    var look = h('select');
+    [['system', 'Match system'], ['light', 'Light'], ['dark', 'Dark']].forEach(function (o) { look.appendChild(h('option', { value: o[0] }, o[1])); });
+    look.value = KH.uiTheme.pref;
+    look.addEventListener('change', function () { KH.uiTheme.set(look.value); });
+    var body = h('div', { class: 'settings' },
+      h('div', { class: 'set-row' }, h('label', { class: 'chk' }, 'Appearance', look)),
+      h('div', { class: 'hint' }, 'The look of the editor window. Slides keep the deck theme (Document tab).'),
+      h('div', { class: 'set-row' }, check('Autosave', KH.io.autosave, function (v) { KH.io.setAutosave(v); })),
+      h('div', { class: 'hint' }, 'Save changes to the deck file as you work.'),
+      h('div', { class: 'set-row' }, check('Live preview of scripted HTML blocks', KH.preview.enabled, function (v) { KH.preview.setEnabled(v); })),
+      h('div', { class: 'hint' }, 'Show blocks drawn by the deck\u2019s custom JavaScript as they will look when presenting.'),
+      h('div', { class: 'hint set-note' }, 'These settings belong to this browser. They are not saved in the deck.'));
+    U.modal({ title: 'Settings', body: body, width: '440px' });
+  };
+
   U.shortcuts = function () {
     var rows = [
       ['⌘S', 'Save'], ['⌘Z / ⇧⌘Z', 'Undo / redo'], ['⌘O', 'Open / new presentation'], ['⌥⌘P', 'Play from current slide'],

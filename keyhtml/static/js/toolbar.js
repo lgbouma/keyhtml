@@ -60,10 +60,7 @@ KH.toolbar = (function () {
       { label: 'Insert File from Path…', action: TB.importPath },
       { label: 'Reveal in Finder', action: function () { KH.io.reveal(); } },
       { sep: true },
-      { label: 'Editor Appearance: System', checked: KH.uiTheme.pref === 'system', action: function () { KH.uiTheme.set('system'); } },
-      { label: 'Editor Appearance: Light', checked: KH.uiTheme.pref === 'light', action: function () { KH.uiTheme.set('light'); } },
-      { label: 'Editor Appearance: Dark', checked: KH.uiTheme.pref === 'dark', action: function () { KH.uiTheme.set('dark'); } },
-      { sep: true },
+      { label: 'Settings…', action: function () { KH.ui.settings(); } },
       { label: 'Keyboard Shortcuts…', shortcut: '⌘/', action: function () { KH.ui.shortcuts(); } },
     ];
   }

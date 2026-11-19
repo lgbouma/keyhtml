@@ -93,7 +93,6 @@ KH.uiTheme = (function () {
     T.pref = v === 'light' || v === 'dark' ? v : 'system';
     try { localStorage.setItem('keyhtml.uiTheme', T.pref); } catch (e) {}
     T.apply();
-    if (KH.inspector && KH.inspector.refresh) KH.inspector.refresh(); // keep the Document tab's control in step
   };
   if (mq) (mq.addEventListener ? mq.addEventListener('change', T.apply) : mq.addListener(T.apply));
   T.apply();

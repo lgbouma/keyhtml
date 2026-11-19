@@ -603,10 +603,7 @@ KH.inspector = (function () {
     s.appendChild(row('Slide size', sel([['1920x1080', '1920 × 1080 (16:9)'], ['1920x1200', '1920 × 1200 (16:10)'], ['1600x1200', '1600 × 1200 (4:3)'], ['3840x2160', '3840 × 2160 (4K)']],
       function () { return M.W + 'x' + M.H; }, function (v) { var p = v.split('x'); M.setSize(parseInt(p[0], 10), parseInt(p[1], 10)); C.fit(); KH.nav.refresh(); docChange(); })));
     s.appendChild(row('Transition', sel([['none', 'None'], ['fade', 'Fade'], ['push', 'Push'], ['zoom', 'Zoom']], function () { return M.setting('transition') || 'none'; }, function (v) { M.setting('transition', v === 'none' ? null : v); docChange(); })));
-    s.appendChild(row('', check('Show slide numbers', function () { return M.setting('slide-numbers') === '1'; }, function (v) { M.setting('slide-numbers', v ? '1' : null); docChange(); }),
-      check('Autosave', function () { return KH.io.autosave; }, function (v) { KH.io.setAutosave(v); })));
-    s.appendChild(row('Editor', sel([['system', 'Match system'], ['light', 'Light'], ['dark', 'Dark']], function () { return KH.uiTheme.pref; }, function (v) { KH.uiTheme.set(v); })));
-    s.appendChild(hint('Editor sets the look of this window only. The slides keep the deck theme below.'));
+    s.appendChild(row('', check('Show slide numbers', function () { return M.setting('slide-numbers') === '1'; }, function (v) { M.setting('slide-numbers', v ? '1' : null); docChange(); })));
     body.appendChild(s);
 
     var th = sec('Theme');
@@ -631,7 +628,6 @@ KH.inspector = (function () {
     adv.appendChild(stack('Custom CSS (scoped to the deck)', ta(function () { return M.customCss; }, function (v) { M.customCss = v; KH.io.applyCustomCss(); KH.nav.refresh(); M.history.push(); }, '', '.kh-slide h1 { letter-spacing: -0.02em }')));
     adv.appendChild(stack('Custom JavaScript (runs when presenting)', ta(function () { return M.customJs; }, function (v) { M.customJs = v; M.history.push(); }, '', "document.addEventListener('kh:slide', e => { /* e.detail.index, e.detail.slide */ });")));
     adv.appendChild(stack('External scripts (one path per line, relative to the deck)', ta(function () { return (M.scripts || []).join('\n'); }, function (v) { M.scripts = v.split(/\n/).map(function (x) { return x.trim(); }).filter(Boolean); M.history.push(); }, '', 'data/my_data.js')));
-    adv.appendChild(row('', check('Live preview of scripted HTML blocks', function () { return KH.preview.enabled; }, function (v) { KH.preview.setEnabled(v); })));
     adv.appendChild(hint('Hooks while presenting: kh:ready, kh:slide (detail: index, step, slide), kh:next / kh:prev (cancelable), and window.khPlayer. In the editor, custom JS runs only inside the isolated live preview laid over HTML blocks that hold a canvas, a data-demo or a script.'));
     body.appendChild(adv);
 

@@ -22,6 +22,9 @@ The inspector (right) has three tabs: **Format** (properties of the selection, o
 when nothing is selected), **Animate** (build order and effect; slide transitions) and **Document**
 (title, slide size, theme presets incl. Dark, fonts, LaTeX macros, custom CSS/JS, export).
 
+`File ▸ Settings` holds the editor's own preferences: appearance (light, dark or match the system),
+autosave, and the live preview of scripted blocks. They are stored in the browser, not in the deck.
+
 Shortcuts (also under `File ▸ Keyboard Shortcuts`, `⌘/`): `⌘S` save · `⌘Z/⇧⌘Z` undo/redo · `⌘D` duplicate
 · `⌘C ⌘X ⌘V` · `⌫` delete · arrows nudge (`⇧` ×10) · `⌘] ⌘[` reorder · `⌘L` lock · `⌘G/⇧⌘G` group/ungroup ·
 `⌘K` crop image · `⇧⌘N` new slide · `⌘= ⌘- ⌘0` zoom · `⌥-drag` duplicate · `⇧-drag` constrain ·
@@ -103,7 +106,7 @@ block, so you see what Play will show. The block is marked with a dashed outline
 scripted HTML block* badge: the picture is not editable, edit the HTML source or the custom JS instead.
 Double-clicking still edits the block's text in place (the preview pauses while you type). Auto-detection
 picks blocks containing a canvas, a `data-demo` attribute or a script when the deck has custom JS; the
-block's inspector (`Preview: Auto / Always / Never`) overrides it, and Document ▸ Advanced turns the
+block's inspector (`Preview: Auto / Always / Never`) overrides it, and `File ▸ Settings` turns the
 feature off altogether. The player exposes hooks so interactive demos keep working:
 
 ```js
