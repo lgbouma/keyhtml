@@ -605,6 +605,8 @@ KH.inspector = (function () {
     s.appendChild(row('Transition', sel([['none', 'None'], ['fade', 'Fade'], ['push', 'Push'], ['zoom', 'Zoom']], function () { return M.setting('transition') || 'none'; }, function (v) { M.setting('transition', v === 'none' ? null : v); docChange(); })));
     s.appendChild(row('', check('Show slide numbers', function () { return M.setting('slide-numbers') === '1'; }, function (v) { M.setting('slide-numbers', v ? '1' : null); docChange(); }),
       check('Autosave', function () { return KH.io.autosave; }, function (v) { KH.io.setAutosave(v); })));
+    s.appendChild(row('Editor', sel([['system', 'Match system'], ['light', 'Light'], ['dark', 'Dark']], function () { return KH.uiTheme.pref; }, function (v) { KH.uiTheme.set(v); })));
+    s.appendChild(hint('Editor sets the look of this window only. The slides keep the deck theme below.'));
     body.appendChild(s);
 
     var th = sec('Theme');
